@@ -130,8 +130,8 @@ Deployment
         └───────────▲──────────────┘
                     │
         ┌───────────┼──────────────┐
-        │ Store Manager Dashboard   │
-        │         (React)           │
+        │ Store Manager Dashboard  │
+        │         (React)          │
         └───────────▲──────────────┘
                     │ API Calls
                     │
@@ -141,8 +141,8 @@ Deployment
                     │ ORM
                     │
           ┌─────────┴──────────┐
-          │     PostgreSQL      │
-          └──────────────────────┘
+          │     PostgreSQL     │
+          └────────────────────┘
 
 
 ⸻
