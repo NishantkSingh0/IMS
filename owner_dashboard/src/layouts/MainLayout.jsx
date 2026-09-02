@@ -54,11 +54,15 @@ const MainLayout = () => {
           {/* Logo */}
           <div className="flex items-center justify-between p-4 border-b border-indigo-700">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <FiTrendingUp className="w-6 h-6 text-indigo-600" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="BMS Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg">BMS</h1>
+                <h1 className="text-white font-bold text-lg">IMS</h1>
                 <p className="text-indigo-200 text-xs">Owner Dashboard</p>
               </div>
             </div>

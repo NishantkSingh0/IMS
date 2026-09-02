@@ -205,8 +205,9 @@ Backend
 
 cd backend
 pip install -r requirements.txt
+cp .env.example .env
 python manage.py migrate
-python manage.py loaddata mock_data.json
+python manage.py load_mock_data
 python manage.py runserver
 
 Store Manager Dashboard

@@ -33,8 +33,8 @@ class Command(BaseCommand):
         
         users_data = [
             {
-                'email': 'owner@example.com',
-                'password': 'owner123',
+                'email': 'admin@oaknore.in',
+                'password': 'O$1234567890',
                 'first_name': 'Rajesh',
                 'last_name': 'Kumar',
                 'role': 'owner',
@@ -43,36 +43,20 @@ class Command(BaseCommand):
                 'is_superuser': True,
             },
             {
-                'email': 'manager@example.com',
-                'password': 'manager123',
-                'first_name': 'Priya',
-                'last_name': 'Sharma',
-                'role': 'manager',
-                'phone': '9876543211',
+                'email': 'harvansh@oaknore.in',
+                'password': 'O$1234567890',
+                'first_name': 'Harvansh',
+                'last_name': 'Kumar',
+                'role': 'Manager',
+                'phone': '6396003413',
             },
             {
-                'email': 'cashier1@example.com',
-                'password': 'cashier123',
-                'first_name': 'Amit',
-                'last_name': 'Singh',
-                'role': 'cashier',
+                'email': 'inventory@oaknore.in',
+                'password': 'O$1234567890',
+                'first_name': 'Inventory',
+                'last_name': 'Null',
+                'role': 'cashier',          # worker || cashier || Manager
                 'phone': '9876543212',
-            },
-            {
-                'email': 'cashier2@example.com',
-                'password': 'cashier123',
-                'first_name': 'Neha',
-                'last_name': 'Patel',
-                'role': 'cashier',
-                'phone': '9876543213',
-            },
-            {
-                'email': 'worker@example.com',
-                'password': 'worker123',
-                'first_name': 'Ravi',
-                'last_name': 'Verma',
-                'role': 'worker',
-                'phone': '9876543214',
             },
         ]
         
@@ -94,16 +78,14 @@ class Command(BaseCommand):
         from inventory.models import Category
         
         categories = [
-            {'name': 'Electronics', 'description': 'Electronic devices and accessories'},
-            {'name': 'Groceries', 'description': 'Daily groceries and food items'},
-            {'name': 'Clothing', 'description': 'Men, Women, and Kids clothing'},
-            {'name': 'Home & Kitchen', 'description': 'Home appliances and kitchen items'},
-            {'name': 'Beauty & Personal Care', 'description': 'Beauty products and personal care items'},
-            {'name': 'Sports & Fitness', 'description': 'Sports equipment and fitness accessories'},
-            {'name': 'Books & Stationery', 'description': 'Books, notebooks, and stationery items'},
-            {'name': 'Toys & Games', 'description': 'Toys and games for all ages'},
-            {'name': 'Health & Wellness', 'description': 'Health supplements and wellness products'},
-            {'name': 'Beverages', 'description': 'Drinks and beverages'},
+            {'name': 'Plywood & Boards', 'description': 'Plywood, MDF, laminates, and engineered wood boards'},
+            {'name': 'Paints & Finishes', 'description': 'Paints, primers, thinners, polish, and finishing materials'},
+            {'name': 'Stone & Polishing', 'description': 'Natural stone, abrasives, sealers, and polishing consumables'},
+            {'name': 'Carpentry Hardware', 'description': 'Adhesives, fasteners, hinges, handles, and woodworking supplies'},
+            {'name': 'Metal & Fabrication', 'description': 'Metal sheets, tubes, rods, welding, and fabrication consumables'},
+            {'name': 'Electroplating Supplies', 'description': 'Plating chemicals, anodes, cleaners, and process consumables'},
+            {'name': 'Upholstery Materials', 'description': 'Foam, fabric, leatherette, thread, and upholstery accessories'},
+            {'name': 'Electrical & Safety', 'description': 'Electrical fittings, cables, PPE, and workshop safety supplies'},
         ]
         
         for cat_data in categories:
@@ -116,61 +98,13 @@ class Command(BaseCommand):
         from inventory.models import Supplier
         
         suppliers = [
-            {
-                'name': 'ABC Electronics Ltd',
-                'contact_person': 'Suresh Gupta',
-                'email': 'suresh@abcelectronics.com',
-                'phone': '9811111111',
-                'address': '123 Industrial Area',
-                'city': 'Delhi',
-                'state': 'Delhi',
-                'pincode': '110001',
-                'gst_number': '07AAACB1234F1ZV',
-            },
-            {
-                'name': 'Fresh Foods India',
-                'contact_person': 'Anita Reddy',
-                'email': 'anita@freshfoods.com',
-                'phone': '9822222222',
-                'address': '456 Market Street',
-                'city': 'Mumbai',
-                'state': 'Maharashtra',
-                'pincode': '400001',
-                'gst_number': '27AABCF5678G1ZK',
-            },
-            {
-                'name': 'Style Garments',
-                'contact_person': 'Mohammad Khan',
-                'email': 'khan@stylegarments.com',
-                'phone': '9833333333',
-                'address': '789 Textile Hub',
-                'city': 'Surat',
-                'state': 'Gujarat',
-                'pincode': '395001',
-                'gst_number': '24AADCS9012H1ZL',
-            },
-            {
-                'name': 'Kitchen World',
-                'contact_person': 'Lakshmi Iyer',
-                'email': 'lakshmi@kitchenworld.com',
-                'phone': '9844444444',
-                'address': '321 Commerce Center',
-                'city': 'Chennai',
-                'state': 'Tamil Nadu',
-                'pincode': '600001',
-                'gst_number': '33AABCK3456I1ZM',
-            },
-            {
-                'name': 'Beauty Plus',
-                'contact_person': 'Pooja Mehta',
-                'email': 'pooja@beautyplus.com',
-                'phone': '9855555555',
-                'address': '654 Beauty Lane',
-                'city': 'Bangalore',
-                'state': 'Karnataka',
-                'pincode': '560001',
-                'gst_number': '29AADCB7890J1ZN',
-            },
+            {'name': 'National Board & Plywood Supply', 'contact_person': 'Suresh Gupta', 'email': 'suresh@nationalboards.example.com', 'phone': '9811111111', 'address': '123 Industrial Area', 'city': 'Bengaluru', 'state': 'Karnataka', 'pincode': '560001', 'gst_number': '29AAACB1234F1ZV'},
+            {'name': 'Spectrum Paints & Coatings', 'contact_person': 'Anita Reddy', 'email': 'anita@spectrumpaints.example.com', 'phone': '9822222222', 'address': '456 Industrial Estate', 'city': 'Hyderabad', 'state': 'Telangana', 'pincode': '500001', 'gst_number': '36AABCF5678G1ZK'},
+            {'name': 'Granite & Stone Processors', 'contact_person': 'Mohammad Khan', 'email': 'khan@graniteprocessors.example.com', 'phone': '9833333333', 'address': '789 Stone Market', 'city': 'Udaipur', 'state': 'Rajasthan', 'pincode': '313001', 'gst_number': '08AADCS9012H1ZL'},
+            {'name': 'ProCut Carpentry Hardware', 'contact_person': 'Lakshmi Iyer', 'email': 'lakshmi@procut.example.com', 'phone': '9844444444', 'address': '321 Furniture Cluster', 'city': 'Chennai', 'state': 'Tamil Nadu', 'pincode': '600001', 'gst_number': '33AABCK3456I1ZM'},
+            {'name': 'Apex Metals & Welding', 'contact_person': 'Pooja Mehta', 'email': 'pooja@apexmetals.example.com', 'phone': '9855555555', 'address': '654 Fabrication Road', 'city': 'Pune', 'state': 'Maharashtra', 'pincode': '411001', 'gst_number': '27AADCB7890J1ZN'},
+            {'name': 'BrightPlate Chemicals', 'contact_person': 'Nitin Shah', 'email': 'nitin@brightplate.example.com', 'phone': '9866666666', 'address': '18 Chemical Industrial Zone', 'city': 'Ahmedabad', 'state': 'Gujarat', 'pincode': '380001', 'gst_number': '24AABCB2468K1ZP'},
+            {'name': 'ComfortFoam Upholstery Supply', 'contact_person': 'Meena Nair', 'email': 'meena@comfortfoam.example.com', 'phone': '9877777777', 'address': '42 Textile and Furniture Park', 'city': 'Kochi', 'state': 'Kerala', 'pincode': '682001', 'gst_number': '32AABCC1357L1ZT'},
         ]
         
         for sup_data in suppliers:
@@ -179,88 +113,66 @@ class Command(BaseCommand):
         self.stdout.write(f'Created {len(suppliers)} suppliers')
 
     def create_products(self):
-        """Create products."""
+        """Create manufacturing raw materials and workshop consumables."""
         from inventory.models import Product, Category, Supplier
         
         categories = {cat.name: cat for cat in Category.objects.all()}
         suppliers = list(Supplier.objects.all())
         
         products_data = [
-            # Electronics
-            {'name': 'Wireless Earbuds Pro', 'category': 'Electronics', 'cost_price': 800, 'selling_price': 1499, 'stock': 45, 'barcode': 'ELE001'},
-            {'name': 'Bluetooth Speaker 10W', 'category': 'Electronics', 'cost_price': 600, 'selling_price': 1199, 'stock': 30, 'barcode': 'ELE002'},
-            {'name': 'USB-C Fast Charger', 'category': 'Electronics', 'cost_price': 200, 'selling_price': 499, 'stock': 100, 'barcode': 'ELE003'},
-            {'name': 'Power Bank 10000mAh', 'category': 'Electronics', 'cost_price': 500, 'selling_price': 999, 'stock': 55, 'barcode': 'ELE004'},
-            {'name': 'Wireless Mouse', 'category': 'Electronics', 'cost_price': 300, 'selling_price': 599, 'stock': 70, 'barcode': 'ELE005'},
-            {'name': 'LED Desk Lamp', 'category': 'Electronics', 'cost_price': 400, 'selling_price': 799, 'stock': 25, 'barcode': 'ELE006'},
-            
-            # Groceries
-            {'name': 'Basmati Rice 5kg', 'category': 'Groceries', 'cost_price': 350, 'selling_price': 450, 'stock': 80, 'barcode': 'GRO001', 'gst_rate': 5},
-            {'name': 'Wheat Flour 10kg', 'category': 'Groceries', 'cost_price': 400, 'selling_price': 520, 'stock': 60, 'barcode': 'GRO002', 'gst_rate': 5},
-            {'name': 'Cooking Oil 5L', 'category': 'Groceries', 'cost_price': 600, 'selling_price': 750, 'stock': 50, 'barcode': 'GRO003', 'gst_rate': 5},
-            {'name': 'Sugar 5kg', 'category': 'Groceries', 'cost_price': 200, 'selling_price': 260, 'stock': 90, 'barcode': 'GRO004', 'gst_rate': 5},
-            {'name': 'Salt 1kg', 'category': 'Groceries', 'cost_price': 15, 'selling_price': 25, 'stock': 150, 'barcode': 'GRO005', 'gst_rate': 5},
-            {'name': 'Tea 500g', 'category': 'Groceries', 'cost_price': 150, 'selling_price': 220, 'stock': 100, 'barcode': 'GRO006', 'gst_rate': 5},
-            {'name': 'Coffee Powder 200g', 'category': 'Groceries', 'cost_price': 180, 'selling_price': 280, 'stock': 70, 'barcode': 'GRO007', 'gst_rate': 5},
-            {'name': 'Honey 500g', 'category': 'Groceries', 'cost_price': 200, 'selling_price': 320, 'stock': 40, 'barcode': 'GRO008', 'gst_rate': 5},
-            
-            # Clothing
-            {'name': 'Cotton T-Shirt Men', 'category': 'Clothing', 'cost_price': 200, 'selling_price': 499, 'stock': 120, 'barcode': 'CLO001'},
-            {'name': 'Denim Jeans Men', 'category': 'Clothing', 'cost_price': 500, 'selling_price': 1299, 'stock': 60, 'barcode': 'CLO002'},
-            {'name': 'Formal Shirt Men', 'category': 'Clothing', 'cost_price': 350, 'selling_price': 899, 'stock': 80, 'barcode': 'CLO003'},
-            {'name': 'Kurti Women', 'category': 'Clothing', 'cost_price': 300, 'selling_price': 699, 'stock': 90, 'barcode': 'CLO004'},
-            {'name': 'Saree Cotton', 'category': 'Clothing', 'cost_price': 600, 'selling_price': 1499, 'stock': 40, 'barcode': 'CLO005'},
-            {'name': 'Kids T-Shirt', 'category': 'Clothing', 'cost_price': 150, 'selling_price': 349, 'stock': 100, 'barcode': 'CLO006'},
-            
-            # Home & Kitchen
-            {'name': 'Non-Stick Pan Set', 'category': 'Home & Kitchen', 'cost_price': 800, 'selling_price': 1599, 'stock': 25, 'barcode': 'HOM001'},
-            {'name': 'Pressure Cooker 5L', 'category': 'Home & Kitchen', 'cost_price': 1000, 'selling_price': 1999, 'stock': 30, 'barcode': 'HOM002'},
-            {'name': 'Dinner Set 24pc', 'category': 'Home & Kitchen', 'cost_price': 1200, 'selling_price': 2499, 'stock': 15, 'barcode': 'HOM003'},
-            {'name': 'Water Bottle Steel', 'category': 'Home & Kitchen', 'cost_price': 200, 'selling_price': 449, 'stock': 80, 'barcode': 'HOM004'},
-            {'name': 'Food Container Set', 'category': 'Home & Kitchen', 'cost_price': 300, 'selling_price': 599, 'stock': 60, 'barcode': 'HOM005'},
-            {'name': 'Mixer Grinder', 'category': 'Home & Kitchen', 'cost_price': 1500, 'selling_price': 2999, 'stock': 20, 'barcode': 'HOM006'},
-            
-            # Beauty & Personal Care
-            {'name': 'Face Wash 100ml', 'category': 'Beauty & Personal Care', 'cost_price': 80, 'selling_price': 150, 'stock': 100, 'barcode': 'BEA001'},
-            {'name': 'Shampoo 400ml', 'category': 'Beauty & Personal Care', 'cost_price': 150, 'selling_price': 299, 'stock': 80, 'barcode': 'BEA002'},
-            {'name': 'Body Lotion 200ml', 'category': 'Beauty & Personal Care', 'cost_price': 120, 'selling_price': 249, 'stock': 70, 'barcode': 'BEA003'},
-            {'name': 'Sunscreen SPF50', 'category': 'Beauty & Personal Care', 'cost_price': 200, 'selling_price': 399, 'stock': 50, 'barcode': 'BEA004'},
-            {'name': 'Hair Oil 200ml', 'category': 'Beauty & Personal Care', 'cost_price': 100, 'selling_price': 199, 'stock': 90, 'barcode': 'BEA005'},
-            {'name': 'Perfume 100ml', 'category': 'Beauty & Personal Care', 'cost_price': 500, 'selling_price': 999, 'stock': 35, 'barcode': 'BEA006'},
-            
-            # Sports & Fitness
-            {'name': 'Yoga Mat', 'category': 'Sports & Fitness', 'cost_price': 300, 'selling_price': 599, 'stock': 40, 'barcode': 'SPO001'},
-            {'name': 'Dumbbells 5kg Pair', 'category': 'Sports & Fitness', 'cost_price': 400, 'selling_price': 799, 'stock': 30, 'barcode': 'SPO002'},
-            {'name': 'Skipping Rope', 'category': 'Sports & Fitness', 'cost_price': 100, 'selling_price': 249, 'stock': 60, 'barcode': 'SPO003'},
-            {'name': 'Cricket Ball', 'category': 'Sports & Fitness', 'cost_price': 150, 'selling_price': 299, 'stock': 80, 'barcode': 'SPO004'},
-            {'name': 'Badminton Racket', 'category': 'Sports & Fitness', 'cost_price': 350, 'selling_price': 699, 'stock': 25, 'barcode': 'SPO005'},
-            {'name': 'Football Size 5', 'category': 'Sports & Fitness', 'cost_price': 400, 'selling_price': 799, 'stock': 20, 'barcode': 'SPO006'},
-            
-            # Books & Stationery
-            {'name': 'Notebook 200 Pages', 'category': 'Books & Stationery', 'cost_price': 40, 'selling_price': 80, 'stock': 200, 'barcode': 'BOO001', 'gst_rate': 5},
-            {'name': 'Pen Set 10pc', 'category': 'Books & Stationery', 'cost_price': 50, 'selling_price': 99, 'stock': 150, 'barcode': 'BOO002', 'gst_rate': 5},
-            {'name': 'Geometry Box', 'category': 'Books & Stationery', 'cost_price': 80, 'selling_price': 149, 'stock': 100, 'barcode': 'BOO003', 'gst_rate': 5},
-            {'name': 'Dictionary English', 'category': 'Books & Stationery', 'cost_price': 150, 'selling_price': 299, 'stock': 40, 'barcode': 'BOO004', 'gst_rate': 5},
-            {'name': 'Drawing Book A4', 'category': 'Books & Stationery', 'cost_price': 60, 'selling_price': 120, 'stock': 80, 'barcode': 'BOO005', 'gst_rate': 5},
-            
-            # Toys & Games
-            {'name': 'Building Blocks Set', 'category': 'Toys & Games', 'cost_price': 300, 'selling_price': 599, 'stock': 35, 'barcode': 'TOY001'},
-            {'name': 'Remote Control Car', 'category': 'Toys & Games', 'cost_price': 500, 'selling_price': 999, 'stock': 20, 'barcode': 'TOY002'},
-            {'name': 'Board Game Classic', 'category': 'Toys & Games', 'cost_price': 250, 'selling_price': 499, 'stock': 30, 'barcode': 'TOY003'},
-            {'name': 'Soft Toy Bear', 'category': 'Toys & Games', 'cost_price': 200, 'selling_price': 399, 'stock': 45, 'barcode': 'TOY004'},
-            {'name': 'Puzzle 500 Pieces', 'category': 'Toys & Games', 'cost_price': 150, 'selling_price': 299, 'stock': 40, 'barcode': 'TOY005'},
-            
-            # Health & Wellness
-            {'name': 'Multivitamin 60 Tablets', 'category': 'Health & Wellness', 'cost_price': 200, 'selling_price': 399, 'stock': 60, 'barcode': 'HEA001', 'gst_rate': 12},
-            {'name': 'Protein Powder 1kg', 'category': 'Health & Wellness', 'cost_price': 1200, 'selling_price': 2199, 'stock': 25, 'barcode': 'HEA002', 'gst_rate': 12},
-            {'name': 'Hand Sanitizer 500ml', 'category': 'Health & Wellness', 'cost_price': 100, 'selling_price': 199, 'stock': 100, 'barcode': 'HEA003', 'gst_rate': 12},
-            {'name': 'First Aid Kit', 'category': 'Health & Wellness', 'cost_price': 300, 'selling_price': 599, 'stock': 30, 'barcode': 'HEA004', 'gst_rate': 12},
-            
-            # Beverages
-            {'name': 'Green Tea 100 Bags', 'category': 'Beverages', 'cost_price': 180, 'selling_price': 349, 'stock': 50, 'barcode': 'BEV001', 'gst_rate': 12},
-            {'name': 'Instant Coffee 200g', 'category': 'Beverages', 'cost_price': 250, 'selling_price': 449, 'stock': 60, 'barcode': 'BEV002', 'gst_rate': 12},
-            {'name': 'Fruit Juice 1L', 'category': 'Beverages', 'cost_price': 80, 'selling_price': 150, 'stock': 80, 'barcode': 'BEV003', 'gst_rate': 12},
-            {'name': 'Energy Drink 250ml', 'category': 'Beverages', 'cost_price': 50, 'selling_price': 99, 'stock': 100, 'barcode': 'BEV004', 'gst_rate': 12},
+            {'name': 'Commercial Plywood 8mm', 'category': 'Plywood & Boards', 'cost_price': 1450, 'selling_price': 1750, 'stock': 28, 'unit': 'pcs', 'barcode': 'PLY001', 'gst_rate': 18, 'hsn_code': '441231'},
+            {'name': 'BWP Marine Plywood 18mm', 'category': 'Plywood & Boards', 'cost_price': 2850, 'selling_price': 3400, 'stock': 18, 'unit': 'pcs', 'barcode': 'PLY002', 'gst_rate': 18, 'hsn_code': '441231'},
+            {'name': 'MDF Board 12mm', 'category': 'Plywood & Boards', 'cost_price': 920, 'selling_price': 1150, 'stock': 35, 'unit': 'pcs', 'barcode': 'PLY003', 'gst_rate': 18, 'hsn_code': '441114'},
+            {'name': 'Decorative Laminate Sheet', 'category': 'Plywood & Boards', 'cost_price': 480, 'selling_price': 650, 'stock': 60, 'unit': 'pcs', 'barcode': 'PLY004', 'gst_rate': 18, 'hsn_code': '482390'},
+            {'name': 'PU Wood Primer 20L', 'category': 'Paints & Finishes', 'cost_price': 4200, 'selling_price': 5100, 'stock': 12, 'unit': 'box', 'barcode': 'PNT001', 'gst_rate': 18, 'hsn_code': '320810'},
+            {'name': 'PU Top Coat Clear 20L', 'category': 'Paints & Finishes', 'cost_price': 5600, 'selling_price': 6800, 'stock': 9, 'unit': 'box', 'barcode': 'PNT002', 'gst_rate': 18, 'hsn_code': '320810'},
+            {'name': 'NC Sanding Sealer 20L', 'category': 'Paints & Finishes', 'cost_price': 3100, 'selling_price': 3900, 'stock': 15, 'unit': 'box', 'barcode': 'PNT003', 'gst_rate': 18, 'hsn_code': '320890'},
+            {'name': 'Thinner 5L', 'category': 'Paints & Finishes', 'cost_price': 650, 'selling_price': 850, 'stock': 42, 'unit': 'l', 'barcode': 'PNT004', 'gst_rate': 18, 'hsn_code': '381400'},
+            {'name': 'Black Granite Slab 20mm', 'category': 'Stone & Polishing', 'cost_price': 3200, 'selling_price': 3900, 'stock': 16, 'unit': 'pcs', 'barcode': 'STN001', 'gst_rate': 18, 'hsn_code': '680293'},
+            {'name': 'White Marble Slab 18mm', 'category': 'Stone & Polishing', 'cost_price': 4100, 'selling_price': 5000, 'stock': 14, 'unit': 'pcs', 'barcode': 'STN002', 'gst_rate': 18, 'hsn_code': '680221'},
+            {'name': 'Diamond Polishing Pad 4in', 'category': 'Stone & Polishing', 'cost_price': 280, 'selling_price': 375, 'stock': 75, 'unit': 'pcs', 'barcode': 'STN003', 'gst_rate': 18, 'hsn_code': '680421'},
+            {'name': 'Stone Sealer 5L', 'category': 'Stone & Polishing', 'cost_price': 1550, 'selling_price': 1950, 'stock': 20, 'unit': 'l', 'barcode': 'STN004', 'gst_rate': 18, 'hsn_code': '321490'},
+            {'name': 'Wood Adhesive 5kg', 'category': 'Carpentry Hardware', 'cost_price': 620, 'selling_price': 800, 'stock': 35, 'unit': 'kg', 'barcode': 'CAR001', 'gst_rate': 18, 'hsn_code': '350699'},
+            {'name': 'Soft Close Hinge Pair', 'category': 'Carpentry Hardware', 'cost_price': 95, 'selling_price': 135, 'stock': 240, 'unit': 'pcs', 'barcode': 'CAR002', 'gst_rate': 18, 'hsn_code': '830210'},
+            {'name': 'Tandem Drawer Channel 450mm', 'category': 'Carpentry Hardware', 'cost_price': 340, 'selling_price': 475, 'stock': 80, 'unit': 'pcs', 'barcode': 'CAR003', 'gst_rate': 18, 'hsn_code': '830242'},
+            {'name': 'Wood Screw Assorted Box', 'category': 'Carpentry Hardware', 'cost_price': 420, 'selling_price': 550, 'stock': 45, 'unit': 'box', 'barcode': 'CAR004', 'gst_rate': 18, 'hsn_code': '731812'},
+            {'name': 'MS Square Tube 25x25mm', 'category': 'Metal & Fabrication', 'cost_price': 92, 'selling_price': 118, 'stock': 350, 'unit': 'm', 'barcode': 'MET001', 'gst_rate': 18, 'hsn_code': '730661'},
+            {'name': 'SS 304 Sheet 1.5mm', 'category': 'Metal & Fabrication', 'cost_price': 6800, 'selling_price': 7900, 'stock': 22, 'unit': 'pcs', 'barcode': 'MET002', 'gst_rate': 18, 'hsn_code': '721933'},
+            {'name': 'MIG Welding Wire 0.8mm', 'category': 'Metal & Fabrication', 'cost_price': 760, 'selling_price': 950, 'stock': 30, 'unit': 'kg', 'barcode': 'MET003', 'gst_rate': 18, 'hsn_code': '831130'},
+            {'name': 'Cutting Disc 4in', 'category': 'Metal & Fabrication', 'cost_price': 38, 'selling_price': 58, 'stock': 180, 'unit': 'pcs', 'barcode': 'MET004', 'gst_rate': 18, 'hsn_code': '680422'},
+            {'name': 'Nickel Sulphate Plating Grade', 'category': 'Electroplating Supplies', 'cost_price': 680, 'selling_price': 850, 'stock': 90, 'unit': 'kg', 'barcode': 'PLT001', 'gst_rate': 18, 'hsn_code': '283324'},
+            {'name': 'Copper Sulphate Plating Grade', 'category': 'Electroplating Supplies', 'cost_price': 410, 'selling_price': 540, 'stock': 75, 'unit': 'kg', 'barcode': 'PLT002', 'gst_rate': 18, 'hsn_code': '283325'},
+            {'name': 'Electroplating Degreaser', 'category': 'Electroplating Supplies', 'cost_price': 290, 'selling_price': 390, 'stock': 50, 'unit': 'kg', 'barcode': 'PLT003', 'gst_rate': 18, 'hsn_code': '340290'},
+            {'name': 'Nickel Anode Plate', 'category': 'Electroplating Supplies', 'cost_price': 1850, 'selling_price': 2250, 'stock': 24, 'unit': 'kg', 'barcode': 'PLT004', 'gst_rate': 18, 'hsn_code': '750210'},
+            {'name': 'High Density Foam 4in', 'category': 'Upholstery Materials', 'cost_price': 2100, 'selling_price': 2600, 'stock': 25, 'unit': 'pcs', 'barcode': 'UPH001', 'gst_rate': 18, 'hsn_code': '940490'},
+            {'name': 'Furniture Fabric Charcoal', 'category': 'Upholstery Materials', 'cost_price': 480, 'selling_price': 650, 'stock': 120, 'unit': 'm', 'barcode': 'UPH002', 'gst_rate': 5, 'hsn_code': '551219'},
+            {'name': 'Synthetic Leather Roll', 'category': 'Upholstery Materials', 'cost_price': 290, 'selling_price': 390, 'stock': 85, 'unit': 'm', 'barcode': 'UPH003', 'gst_rate': 18, 'hsn_code': '590310'},
+            {'name': 'Upholstery Thread 500g', 'category': 'Upholstery Materials', 'cost_price': 180, 'selling_price': 240, 'stock': 65, 'unit': 'pcs', 'barcode': 'UPH004', 'gst_rate': 5, 'hsn_code': '550810'},
+            {'name': 'Flexible Copper Cable 2.5mm', 'category': 'Electrical & Safety', 'cost_price': 78, 'selling_price': 105, 'stock': 420, 'unit': 'm', 'barcode': 'SAF001', 'gst_rate': 18, 'hsn_code': '854449'},
+            {'name': 'Industrial LED Work Light', 'category': 'Electrical & Safety', 'cost_price': 1250, 'selling_price': 1600, 'stock': 18, 'unit': 'pcs', 'barcode': 'SAF002', 'gst_rate': 18, 'hsn_code': '940540'},
+            {'name': 'Nitrile Safety Gloves Pair', 'category': 'Electrical & Safety', 'cost_price': 35, 'selling_price': 55, 'stock': 250, 'unit': 'pcs', 'barcode': 'SAF003', 'gst_rate': 5, 'hsn_code': '401519'},
+            {'name': 'Respirator Mask Filter', 'category': 'Electrical & Safety', 'cost_price': 220, 'selling_price': 300, 'stock': 40, 'unit': 'pcs', 'barcode': 'SAF004', 'gst_rate': 18, 'hsn_code': '902000'},
+            {'name': 'Fevicol SH Wood Adhesive 5kg', 'category': 'Adhesives & Chemicals', 'cost_price': 720, 'selling_price': 900, 'stock': 40, 'unit': 'kg', 'barcode': 'ADH001', 'gst_rate': 18, 'hsn_code': '350610'},
+            {'name': 'Epoxy Resin 20kg', 'category': 'Adhesives & Chemicals', 'cost_price': 4200, 'selling_price': 5200, 'stock': 15, 'unit': 'box', 'barcode': 'ADH002', 'gst_rate': 18, 'hsn_code': '390730'},
+            {'name': 'Hardener Chemical 5kg', 'category': 'Adhesives & Chemicals', 'cost_price': 1450, 'selling_price': 1850, 'stock': 25, 'unit': 'kg', 'barcode': 'ADH003', 'gst_rate': 18, 'hsn_code': '292130'},
+            {'name': 'Abrasive Sandpaper 120 Grit', 'category': 'Abrasives & Consumables', 'cost_price': 18, 'selling_price': 28, 'stock': 500, 'unit': 'pcs', 'barcode': 'ABR001', 'gst_rate': 18, 'hsn_code': '680520'},
+            {'name': 'Abrasive Sandpaper 320 Grit', 'category': 'Abrasives & Consumables', 'cost_price': 22, 'selling_price': 35, 'stock': 450, 'unit': 'pcs', 'barcode': 'ABR002', 'gst_rate': 18, 'hsn_code': '680520'},
+            {'name': 'Flap Disc 4in', 'category': 'Abrasives & Consumables', 'cost_price': 55, 'selling_price': 85, 'stock': 180, 'unit': 'pcs', 'barcode': 'ABR003', 'gst_rate': 18, 'hsn_code': '680422'},
+            {'name': 'TIG Welding Rod 2.4mm', 'category': 'Welding Consumables', 'cost_price': 620, 'selling_price': 780, 'stock': 35, 'unit': 'kg', 'barcode': 'WLD001', 'gst_rate': 18, 'hsn_code': '831110'},
+            {'name': 'MIG Welding Wire 1.0mm', 'category': 'Welding Consumables', 'cost_price': 780, 'selling_price': 980, 'stock': 28, 'unit': 'kg', 'barcode': 'WLD002', 'gst_rate': 18, 'hsn_code': '831130'},
+            {'name': 'Welding Electrode E6013 3.15mm', 'category': 'Welding Consumables', 'cost_price': 180, 'selling_price': 240, 'stock': 100, 'unit': 'kg', 'barcode': 'WLD003', 'gst_rate': 18, 'hsn_code': '831110'},
+            {'name': 'GI Sheet 1mm', 'category': 'Metal & Fabrication', 'cost_price': 2850, 'selling_price': 3350, 'stock': 30, 'unit': 'pcs', 'barcode': 'MET005', 'gst_rate': 18, 'hsn_code': '721049'},
+            {'name': 'MS Round Bar 12mm', 'category': 'Metal & Fabrication', 'cost_price': 68, 'selling_price': 88, 'stock': 250, 'unit': 'm', 'barcode': 'MET006', 'gst_rate': 18, 'hsn_code': '721499'},
+            {'name': 'Aluminium Sheet 2mm', 'category': 'Metal & Fabrication', 'cost_price': 4200, 'selling_price': 5100, 'stock': 20, 'unit': 'pcs', 'barcode': 'MET007', 'gst_rate': 18, 'hsn_code': '760612'},
+            {'name': 'PVC Edge Band 22mm', 'category': 'Furniture Components', 'cost_price': 42, 'selling_price': 65, 'stock': 300, 'unit': 'm', 'barcode': 'FUR001', 'gst_rate': 18, 'hsn_code': '392049'},
+            {'name': 'ABS Edge Band 2mm', 'category': 'Furniture Components', 'cost_price': 58, 'selling_price': 85, 'stock': 220, 'unit': 'm', 'barcode': 'FUR002', 'gst_rate': 18, 'hsn_code': '392030'},
+            {'name': 'Drawer Lock Small', 'category': 'Furniture Components', 'cost_price': 38, 'selling_price': 65, 'stock': 180, 'unit': 'pcs', 'barcode': 'FUR003', 'gst_rate': 18, 'hsn_code': '830130'},
+            {'name': 'Cabinet Handle 128mm', 'category': 'Furniture Components', 'cost_price': 75, 'selling_price': 120, 'stock': 150, 'unit': 'pcs', 'barcode': 'FUR004', 'gst_rate': 18, 'hsn_code': '830242'},
+            {'name': 'Hydraulic Cabinet Gas Lift', 'category': 'Furniture Components', 'cost_price': 110, 'selling_price': 165, 'stock': 100, 'unit': 'pcs', 'barcode': 'FUR005', 'gst_rate': 18, 'hsn_code': '830242'},
+            {'name': 'PU Foam Adhesive Spray', 'category': 'Adhesives & Chemicals', 'cost_price': 380, 'selling_price': 520, 'stock': 45, 'unit': 'pcs', 'barcode': 'ADH004', 'gst_rate': 18, 'hsn_code': '350610'},
+            {'name': 'Wood Filler White 1kg', 'category': 'Paints & Finishes', 'cost_price': 180, 'selling_price': 260, 'stock': 60, 'unit': 'kg', 'barcode': 'PNT005', 'gst_rate': 18, 'hsn_code': '321410'},
+            {'name': 'Melamine Polish 5L', 'category': 'Paints & Finishes', 'cost_price': 950, 'selling_price': 1250, 'stock': 30, 'unit': 'l', 'barcode': 'PNT006', 'gst_rate': 18, 'hsn_code': '320890'},
+            {'name': 'PU Thinner 20L', 'category': 'Paints & Finishes', 'cost_price': 2100, 'selling_price': 2750, 'stock': 18, 'unit': 'box', 'barcode': 'PNT007', 'gst_rate': 18, 'hsn_code': '381400'},
         ]
         
         for prod_data in products_data:
@@ -288,23 +200,23 @@ class Command(BaseCommand):
         from crm.models import Customer
         
         customers_data = [
-            {'name': 'Vikram Malhotra', 'phone': '9900000001', 'email': 'vikram.m@email.com', 'customer_type': 'retail', 'city': 'Delhi'},
-            {'name': 'Sunita Agarwal', 'phone': '9900000002', 'email': 'sunita.a@email.com', 'customer_type': 'retail', 'city': 'Mumbai'},
-            {'name': 'Ramesh Trading Co', 'phone': '9900000003', 'email': 'ramesh.trading@email.com', 'customer_type': 'wholesale', 'company_name': 'Ramesh Trading Co', 'city': 'Chennai'},
-            {'name': 'Kavitha Reddy', 'phone': '9900000004', 'email': 'kavitha.r@email.com', 'customer_type': 'retail', 'city': 'Hyderabad'},
-            {'name': 'Global Enterprises', 'phone': '9900000005', 'email': 'global.ent@email.com', 'customer_type': 'corporate', 'company_name': 'Global Enterprises Ltd', 'city': 'Bangalore'},
-            {'name': 'Deepak Sharma', 'phone': '9900000006', 'email': 'deepak.s@email.com', 'customer_type': 'retail', 'city': 'Jaipur'},
-            {'name': 'Lakshmi Stores', 'phone': '9900000007', 'email': 'lakshmi.stores@email.com', 'customer_type': 'wholesale', 'company_name': 'Lakshmi Stores', 'city': 'Coimbatore'},
-            {'name': 'Arjun Kapoor', 'phone': '9900000008', 'email': 'arjun.k@email.com', 'customer_type': 'retail', 'city': 'Pune'},
-            {'name': 'Meera Fashions', 'phone': '9900000009', 'email': 'meera.fashions@email.com', 'customer_type': 'wholesale', 'company_name': 'Meera Fashions', 'city': 'Surat'},
-            {'name': 'TechCorp India', 'phone': '9900000010', 'email': 'techcorp@email.com', 'customer_type': 'corporate', 'company_name': 'TechCorp India Pvt Ltd', 'city': 'Gurgaon'},
-            {'name': 'Ananya Iyer', 'phone': '9900000011', 'email': 'ananya.i@email.com', 'customer_type': 'retail', 'city': 'Kochi'},
-            {'name': 'Krishna Distributors', 'phone': '9900000012', 'email': 'krishna.dist@email.com', 'customer_type': 'wholesale', 'company_name': 'Krishna Distributors', 'city': 'Ahmedabad'},
-            {'name': 'Priya Nair', 'phone': '9900000013', 'email': 'priya.n@email.com', 'customer_type': 'retail', 'city': 'Trivandrum'},
-            {'name': 'Metro Supplies', 'phone': '9900000014', 'email': 'metro.sup@email.com', 'customer_type': 'corporate', 'company_name': 'Metro Supplies Corp', 'city': 'Kolkata'},
-            {'name': 'Sanjay Gupta', 'phone': '9900000015', 'email': 'sanjay.g@email.com', 'customer_type': 'retail', 'city': 'Lucknow'},
-            {'name': 'City Mart', 'phone': '9900000016', 'email': 'citymart@email.com', 'customer_type': 'wholesale', 'company_name': 'City Mart', 'city': 'Nagpur'},
-            {'name': 'Rohit Verma', 'phone': '9900000017', 'email': 'rohit.v@email.com', 'customer_type': 'retail', 'city': 'Chandigarh'},
+            {'name': 'Oakline Modular Furniture', 'phone': '9900000001', 'email': 'purchase@oakline.example.com', 'customer_type': 'corporate', 'company_name': 'Oakline Modular Furniture Pvt Ltd', 'city': 'Bengaluru'},
+            {'name': 'StoneCraft Surfaces', 'phone': '9900000002', 'email': 'stores@stonecraft.example.com', 'customer_type': 'corporate', 'company_name': 'StoneCraft Surfaces', 'city': 'Udaipur'},
+            {'name': 'Urban Kitchen Studio', 'phone': '9900000003', 'email': 'procurement@urbankitchen.example.com', 'customer_type': 'wholesale', 'company_name': 'Urban Kitchen Studio', 'city': 'Chennai'},
+            {'name': 'Reddy Interior Works', 'phone': '9900000004', 'email': 'accounts@reddyinterior.example.com', 'customer_type': 'corporate', 'company_name': 'Reddy Interior Works', 'city': 'Hyderabad'},
+            {'name': 'MetalForm Engineering', 'phone': '9900000005', 'email': 'purchase@metalform.example.com', 'customer_type': 'corporate', 'company_name': 'MetalForm Engineering Pvt Ltd', 'city': 'Pune'},
+            {'name': 'CraftHouse Cabinetry', 'phone': '9900000006', 'email': 'stores@crafthouse.example.com', 'customer_type': 'wholesale', 'company_name': 'CraftHouse Cabinetry', 'city': 'Jaipur'},
+            {'name': 'Royal Polish Works', 'phone': '9900000007', 'email': 'admin@royalpolish.example.com', 'customer_type': 'corporate', 'company_name': 'Royal Polish Works', 'city': 'Ahmedabad'},
+            {'name': 'FineLine Office Interiors', 'phone': '9900000008', 'email': 'purchase@fineline.example.com', 'customer_type': 'corporate', 'company_name': 'FineLine Office Interiors', 'city': 'Mumbai'},
+            {'name': 'Comfort Seating Systems', 'phone': '9900000009', 'email': 'stores@comfortseating.example.com', 'customer_type': 'corporate', 'company_name': 'Comfort Seating Systems', 'city': 'Kochi'},
+            {'name': 'Apex Hotel Projects', 'phone': '9900000010', 'email': 'projects@apexhotel.example.com', 'customer_type': 'corporate', 'company_name': 'Apex Hotel Projects Ltd', 'city': 'Gurgaon'},
+            {'name': 'HomeGrid Manufacturing', 'phone': '9900000011', 'email': 'purchase@homegrid.example.com', 'customer_type': 'corporate', 'company_name': 'HomeGrid Manufacturing', 'city': 'Coimbatore'},
+            {'name': 'BuildRight Contractors', 'phone': '9900000012', 'email': 'materials@buildright.example.com', 'customer_type': 'wholesale', 'company_name': 'BuildRight Contractors', 'city': 'Ahmedabad'},
+            {'name': 'NorthStar Furniture Factory', 'phone': '9900000013', 'email': 'purchase@northstar.example.com', 'customer_type': 'corporate', 'company_name': 'NorthStar Furniture Factory', 'city': 'Delhi'},
+            {'name': 'Metro Fabrication Unit', 'phone': '9900000014', 'email': 'stores@metrofab.example.com', 'customer_type': 'corporate', 'company_name': 'Metro Fabrication Unit', 'city': 'Kolkata'},
+            {'name': 'DecorEdge Designers', 'phone': '9900000015', 'email': 'procurement@decoredge.example.com', 'customer_type': 'wholesale', 'company_name': 'DecorEdge Designers', 'city': 'Lucknow'},
+            {'name': 'SouthWood Production House', 'phone': '9900000016', 'email': 'purchase@southwood.example.com', 'customer_type': 'corporate', 'company_name': 'SouthWood Production House', 'city': 'Chennai'},
+            {'name': 'Prime Electro Finishers', 'phone': '9900000017', 'email': 'accounts@primefinishers.example.com', 'customer_type': 'corporate', 'company_name': 'Prime Electro Finishers', 'city': 'Chandigarh'},
         ]
         
         for cust_data in customers_data:

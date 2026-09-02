@@ -186,7 +186,7 @@ const Dashboard = () => {
         {/* Top Products */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Top Selling Products</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Top Used Products</h2>
             <Link to="/products" className="text-primary-600 text-sm hover:underline flex items-center">
               View all <FiArrowRight className="ml-1 w-4 h-4" />
             </Link>

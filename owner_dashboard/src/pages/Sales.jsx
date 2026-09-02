@@ -219,7 +219,7 @@ const Sales = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Products */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Selling Products</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Used Products</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {topProducts.map((product, index) => (
               <div
