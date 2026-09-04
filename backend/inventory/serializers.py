@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Supplier, Product, StockTransaction, LowStockAlert
+from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -26,6 +26,22 @@ class SupplierListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = ['id', 'name', 'phone', 'city', 'is_active']
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    """Serializer for factory departments."""
+
+    class Meta:
+        model = Department
+        fields = ['id', 'name', 'code', 'description', 'is_active', 'created_at', 'updated_at']
+
+
+class DepartmentListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for department selectors."""
+
+    class Meta:
+        model = Department
+        fields = ['id', 'name', 'code', 'description', 'is_active']
 
 
 class ProductSerializer(serializers.ModelSerializer):

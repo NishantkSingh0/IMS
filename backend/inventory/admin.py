@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Supplier, Product, StockTransaction, LowStockAlert
+from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 
 
 @admin.register(Category)
@@ -14,6 +14,14 @@ class SupplierAdmin(admin.ModelAdmin):
     list_display = ('name', 'contact_person', 'phone', 'city', 'is_active')
     list_filter = ('city', 'state', 'is_active')
     search_fields = ('name', 'contact_person', 'email', 'phone')
+
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'code', 'description')
+    readonly_fields = ('created_at', 'updated_at')
 
 
 @admin.register(Product)

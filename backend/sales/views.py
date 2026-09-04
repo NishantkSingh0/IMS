@@ -19,11 +19,11 @@ from .serializers import (
 class InvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for Invoice management."""
     
-    queryset = Invoice.objects.select_related('customer', 'created_by').prefetch_related('items', 'payments').all()
+    queryset = Invoice.objects.select_related('customer', 'department', 'created_by').prefetch_related('items', 'payments').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['payment_status', 'payment_method', 'customer', 'created_by']
-    search_fields = ['invoice_number', 'customer__name', 'notes']
+    filterset_fields = ['department', 'customer', 'created_by']
+    search_fields = ['invoice_number', 'department__name', 'department__code', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'invoice_date']
     ordering = ['-created_at']
     
@@ -36,6 +36,15 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        invoice = serializer.save()
+        return Response(
+            InvoiceSerializer(invoice, context=self.get_serializer_context()).data,
+            status=status.HTTP_201_CREATED
+        )
     
     @action(detail=False, methods=['get'])
     def today(self, request):
@@ -94,8 +103,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         
         queryset = self.queryset.filter(
             invoice_date__gte=start_date,
-            payment_status__in=['paid', 'partial']
-        )
+        ).exclude(payment_status='cancelled')
         
         stats = queryset.aggregate(
             total_sales=Sum('total_amount'),
@@ -128,8 +136,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
-            payment_status__in=['paid', 'partial']
-        ).annotate(
+        ).exclude(payment_status='cancelled').annotate(
             date=TruncDate('created_at')
         ).values('date').annotate(
             total_sales=Sum('total_amount'),
@@ -147,8 +154,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
-            payment_status__in=['paid', 'partial']
-        ).annotate(
+        ).exclude(payment_status='cancelled').annotate(
             month=TruncMonth('created_at')
         ).values('month').annotate(
             total_sales=Sum('total_amount'),
@@ -167,8 +173,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         
         top_products = InvoiceItem.objects.filter(
             invoice__invoice_date__gte=start_date,
-            invoice__payment_status__in=['paid', 'partial']
-        ).values(
+        ).exclude(invoice__payment_status='cancelled').values(
             'product_id', 'product_name'
         ).annotate(
             total_quantity=Sum('quantity'),
@@ -192,6 +197,35 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         )
         
         return Response(list(breakdown))
+
+    @action(detail=False, methods=['get'])
+    def by_department(self, request):
+        """Get invoice value breakdown by department."""
+        days = int(request.query_params.get('days', 30))
+        start_date = timezone.now().date() - timedelta(days=days)
+
+        breakdown = self.queryset.filter(
+            invoice_date__gte=start_date,
+            department__isnull=False
+        ).exclude(payment_status='cancelled').values(
+            'department_id',
+            'department__name',
+            'department__code',
+        ).annotate(
+            total=Sum('total_amount'),
+            count=Count('id')
+        ).order_by('-total')
+
+        return Response([
+            {
+                'department_id': item['department_id'],
+                'department_name': item['department__name'],
+                'department_code': item['department__code'],
+                'total': item['total'],
+                'count': item['count'],
+            }
+            for item in breakdown
+        ])
 
 
 class PaymentViewSet(viewsets.ModelViewSet):

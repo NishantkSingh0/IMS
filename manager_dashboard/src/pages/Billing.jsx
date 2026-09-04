@@ -1,35 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
-import { inventoryAPI, salesAPI, crmAPI } from '../services/api';
+import { inventoryAPI, salesAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
   FiSearch,
   FiPlus,
   FiMinus,
   FiTrash2,
-  FiUser,
+  FiBriefcase,
   FiPercent,
-  FiCreditCard,
-  FiPrinter,
-  FiX,
 } from 'react-icons/fi';
 
 const Billing = () => {
   const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [cart, setCart] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const searchInputRef = useRef(null);
 
   useEffect(() => {
     fetchProducts();
-    fetchCustomers();
+    fetchDepartments();
   }, []);
 
   useEffect(() => {
@@ -55,12 +49,12 @@ const Billing = () => {
     }
   };
 
-  const fetchCustomers = async () => {
+  const fetchDepartments = async () => {
     try {
-      const response = await crmAPI.getCustomers({ is_active: true });
-      setCustomers(response.data.results || response.data);
+      const response = await inventoryAPI.getDepartments({ is_active: true });
+      setDepartments(response.data.results || response.data);
     } catch (error) {
-      console.error('Error fetching customers:', error);
+      console.error('Error fetching departments:', error);
     }
   };
 
@@ -152,10 +146,15 @@ const Billing = () => {
       return;
     }
 
+    if (!selectedDepartment) {
+      toast.error('Please select a department');
+      return;
+    }
+
     setLoading(true);
     try {
       const invoiceData = {
-        customer_id: selectedCustomer?.id || null,
+        department_id: parseInt(selectedDepartment),
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
@@ -163,16 +162,14 @@ const Billing = () => {
           discount: item.discount,
         })),
         discount_percentage: discount,
-        payment_method: paymentMethod,
-        paid_amount: calculateTotal(),
       };
 
       const response = await salesAPI.createInvoice(invoiceData);
-      toast.success(`Invoice ${response.data.invoice_number} created successfully!`);
+      toast.success(`${response.data.invoice_number} created successfully!`);
       
       // Reset
       setCart([]);
-      setSelectedCustomer(null);
+      setSelectedDepartment('');
       setDiscount(0);
       searchInputRef.current?.focus();
     } catch (error) {
@@ -189,12 +186,6 @@ const Billing = () => {
       maximumFractionDigits: 2,
     }).format(amount);
   };
-
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.phone.includes(customerSearch)
-  );
 
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-6">
@@ -314,30 +305,26 @@ const Billing = () => {
 
       {/* Right Panel - Summary & Checkout */}
       <div className="w-96 bg-white rounded-xl shadow-sm flex flex-col">
-        {/* Customer Selection */}
+        {/* Department Selection */}
         <div className="p-4 border-b">
-          <button
-            onClick={() => setShowCustomerModal(true)}
-            className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-          >
-            <div className="flex items-center space-x-3">
-              <FiUser className="w-5 h-5 text-gray-400" />
-              <span className={selectedCustomer ? 'text-gray-900' : 'text-gray-400'}>
-                {selectedCustomer ? selectedCustomer.name : 'Select Customer (Optional)'}
-              </span>
-            </div>
-            {selectedCustomer && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedCustomer(null);
-                }}
-                className="p-1 hover:bg-gray-200 rounded"
-              >
-                <FiX className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
-          </button>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Department
+          </label>
+          <div className="relative">
+            <FiBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Select Department</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name} ({department.code})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Order Summary */}
@@ -360,8 +347,9 @@ const Billing = () => {
                   type="number"
                   value={discount}
                   onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="w-16 text-right border rounded-lg px-2 py-1"
+                  className="w-16 text-right border rounded-lg px-2 py-1 bg-gray-200 text-gray-500 cursor-not-allowed"
                   min="0"
+                  disabled
                   max="100"
                 />
                 <FiPercent className="w-4 h-4 text-gray-400" />
@@ -375,37 +363,17 @@ const Billing = () => {
               <span className="text-primary-600">{formatCurrency(calculateTotal())}</span>
             </div>
           </div>
-
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Payment Method</label>
-            <div className="grid grid-cols-2 gap-2">
-              {['cash', 'card', 'upi', 'credit'].map((method) => (
-                <button
-                  key={method}
-                  onClick={() => setPaymentMethod(method)}
-                  className={`py-2 px-3 rounded-lg border text-sm font-medium capitalize transition ${
-                    paymentMethod === method
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {method}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Checkout Buttons */}
         <div className="p-4 border-t space-y-3">
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || loading}
-            className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cart.length === 0 || !selectedDepartment || loading}
+            className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 rounded-lg font-medium hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FiCreditCard className="w-5 h-5" />
-            <span>{loading ? 'Processing...' : 'Complete Sale'}</span>
+            <FiBriefcase className="w-5 h-5" />
+            <span>{loading ? 'Processing...' : 'Issue to Department'}</span>
           </button>
           <button
             onClick={() => setCart([])}
@@ -418,52 +386,6 @@ const Billing = () => {
         </div>
       </div>
 
-      {/* Customer Selection Modal */}
-      {showCustomerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Select Customer</h3>
-              <button
-                onClick={() => setShowCustomerModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 border-b">
-              <input
-                type="text"
-                value={customerSearch}
-                onChange={(e) => setCustomerSearch(e.target.value)}
-                placeholder="Search by name or phone..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {filteredCustomers.map((customer) => (
-                <button
-                  key={customer.id}
-                  onClick={() => {
-                    setSelectedCustomer(customer);
-                    setShowCustomerModal(false);
-                    setCustomerSearch('');
-                  }}
-                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{customer.name}</p>
-                    <p className="text-sm text-gray-500">{customer.phone}</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 bg-gray-100 rounded capitalize">
-                    {customer.customer_type}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

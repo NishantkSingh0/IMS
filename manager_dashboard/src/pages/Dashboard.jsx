@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { salesAPI, inventoryAPI, crmAPI } from '../services/api';
+import { salesAPI, inventoryAPI } from '../services/api';
 import {
   FiShoppingCart,
   FiDollarSign,
-  FiUsers,
+  FiBriefcase,
   FiAlertTriangle,
   FiTrendingUp,
   FiPackage,
@@ -39,7 +39,7 @@ const StatCard = ({ title, value, icon: Icon, color, subtext }) => (
 const Dashboard = () => {
   const [salesStats, setSalesStats] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
-  const [customerStats, setCustomerStats] = useState(null);
+  const [departments, setDepartments] = useState([]);
   const [dailySummary, setDailySummary] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [lowStockAlerts, setLowStockAlerts] = useState([]);
@@ -55,7 +55,7 @@ const Dashboard = () => {
       const [
         salesRes,
         inventoryRes,
-        customerRes,
+        departmentsRes,
         dailyRes,
         topProductsRes,
         alertsRes,
@@ -63,7 +63,7 @@ const Dashboard = () => {
       ] = await Promise.all([
         salesAPI.getStats({ days: 30 }),
         inventoryAPI.getStats(),
-        crmAPI.getStats(),
+        inventoryAPI.getDepartments(),
         salesAPI.getDailySummary({ days: 14 }),
         salesAPI.getTopProducts({ days: 30, limit: 5 }),
         inventoryAPI.getLowStockAlerts(),
@@ -72,7 +72,7 @@ const Dashboard = () => {
 
       setSalesStats(salesRes.data);
       setInventoryStats(inventoryRes.data);
-      setCustomerStats(customerRes.data);
+      setDepartments(departmentsRes.data.results || departmentsRes.data);
       setDailySummary(dailyRes.data);
       setTopProducts(topProductsRes.data);
       setLowStockAlerts(alertsRes.data);
@@ -110,17 +110,17 @@ const Dashboard = () => {
         </div>
         <Link
           to="/billing"
-          className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition"
+          className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black transition"
         >
           <FiShoppingCart className="w-5 h-5" />
-          <span>New Sale</span>
+          <span>New Issue</span>
         </Link>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Today's Sales"
+          title="Issued Value"
           value={formatCurrency(salesStats?.total_sales)}
           icon={FiDollarSign}
           color="bg-green-500"
@@ -134,15 +134,15 @@ const Dashboard = () => {
           subtext={`${inventoryStats?.low_stock_count || 0} low stock`}
         />
         <StatCard
-          title="Total Customers"
-          value={customerStats?.total_customers || 0}
-          icon={FiUsers}
+          title="Departments"
+          value={departments.length}
+          icon={FiBriefcase}
           color="bg-purple-500"
-          subtext={`${customerStats?.active_customers || 0} active`}
+          subtext={`${departments.filter((department) => department.is_active).length} active`}
         />
         <StatCard
-          title="Pending Amount"
-          value={formatCurrency(salesStats?.pending_amount)}
+          title="Low Stock Alerts"
+          value={inventoryStats?.low_stock_count || 0}
           icon={FiAlertTriangle}
           color="bg-orange-500"
         />
@@ -153,7 +153,7 @@ const Dashboard = () => {
         {/* Sales Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Sales Trend</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Issue Value Trend</h2>
             <span className="text-sm text-gray-500">Last 14 days</span>
           </div>
           <div className="h-64">
@@ -200,14 +200,14 @@ const Dashboard = () => {
                   </span>
                   <div>
                     <p className="font-medium text-gray-900">{product.product_name}</p>
-                    <p className="text-sm text-gray-500">{product.total_quantity} units sold</p>
+                    <p className="text-sm text-gray-500">{product.total_quantity} units issued</p>
                   </div>
                 </div>
                 <p className="font-semibold text-gray-900">{formatCurrency(product.total_revenue)}</p>
               </div>
             ))}
             {topProducts.length === 0 && (
-              <p className="text-gray-500 text-center py-4">No sales data available</p>
+              <p className="text-gray-500 text-center py-4">No issue data available</p>
             )}
           </div>
         </div>
@@ -228,35 +228,21 @@ const Dashboard = () => {
               <thead>
                 <tr className="text-left text-sm text-gray-500 border-b">
                   <th className="pb-3 font-medium">Invoice</th>
-                  <th className="pb-3 font-medium">Customer</th>
+                  <th className="pb-3 font-medium">Department</th>
                   <th className="pb-3 font-medium">Amount</th>
-                  <th className="pb-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {recentInvoices.map((invoice) => (
                   <tr key={invoice.id} className="text-sm">
                     <td className="py-3 font-medium text-gray-900">{invoice.invoice_number}</td>
-                    <td className="py-3 text-gray-600">{invoice.customer_name || 'Walk-in'}</td>
+                    <td className="py-3 text-gray-600">{invoice.department_name || '-'}</td>
                     <td className="py-3 font-medium text-gray-900">{formatCurrency(invoice.total_amount)}</td>
-                    <td className="py-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          invoice.payment_status === 'paid'
-                            ? 'bg-green-100 text-green-700'
-                            : invoice.payment_status === 'partial'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {invoice.payment_status}
-                      </span>
-                    </td>
                   </tr>
                 ))}
                 {recentInvoices.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="py-4 text-center text-gray-500">
+                    <td colSpan="3" className="py-4 text-center text-gray-500">
                       No invoices today
                     </td>
                   </tr>

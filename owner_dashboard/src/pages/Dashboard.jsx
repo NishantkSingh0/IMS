@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { salesAPI, inventoryAPI, crmAPI, staffAPI } from '../services/api';
+import { salesAPI, inventoryAPI, staffAPI } from '../services/api';
 import {
   FiDollarSign,
   FiShoppingBag,
-  FiUsers,
+  FiBriefcase,
   FiPackage,
   FiTrendingUp,
   FiTrendingDown,
@@ -14,9 +14,6 @@ import {
   Area,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,10 +25,10 @@ import {
 const Dashboard = () => {
   const [salesStats, setSalesStats] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
-  const [customerStats, setCustomerStats] = useState(null);
+  const [departments, setDepartments] = useState([]);
   const [staffStats, setStaffStats] = useState(null);
   const [dailySales, setDailySales] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [departmentUsage, setDepartmentUsage] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,27 +41,27 @@ const Dashboard = () => {
       const [
         salesRes,
         inventoryRes,
-        customerRes,
+        departmentsRes,
         staffRes,
         dailyRes,
-        paymentRes,
+        departmentRes,
         topProductsRes,
       ] = await Promise.all([
         salesAPI.getStats(),
         inventoryAPI.getStats(),
-        crmAPI.getStats(),
+        inventoryAPI.getDepartments(),
         staffAPI.getStats(),
         salesAPI.getDailySummary({ days: 30 }),
-        salesAPI.getByPaymentMethod(),
+        salesAPI.getByDepartment(),
         salesAPI.getTopProducts({ limit: 5 }),
       ]);
 
       setSalesStats(salesRes.data);
       setInventoryStats(inventoryRes.data);
-      setCustomerStats(customerRes.data);
+      setDepartments(departmentsRes.data.results || departmentsRes.data);
       setStaffStats(staffRes.data);
       setDailySales(dailyRes.data || []);
-      setPaymentMethods(paymentRes.data || []);
+      setDepartmentUsage(departmentRes.data || []);
       setTopProducts(topProductsRes.data || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -81,8 +78,6 @@ const Dashboard = () => {
     }).format(amount || 0);
   };
 
-  const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -93,8 +88,8 @@ const Dashboard = () => {
 
   const stats = [
     {
-      name: 'Total Revenue',
-      value: formatCurrency(salesStats?.total_revenue),
+      name: 'Issued Value',
+      value: formatCurrency(salesStats?.total_sales),
       change: '+12.5%',
       changeType: 'increase',
       icon: FiDollarSign,
@@ -102,7 +97,7 @@ const Dashboard = () => {
       bgColor: 'bg-green-50',
     },
     {
-      name: 'Total Orders',
+      name: 'Total Invoices',
       value: salesStats?.total_invoices?.toLocaleString() || '0',
       change: '+8.2%',
       changeType: 'increase',
@@ -111,11 +106,11 @@ const Dashboard = () => {
       bgColor: 'bg-indigo-50',
     },
     {
-      name: 'Active Customers',
-      value: customerStats?.active_customers?.toLocaleString() || '0',
+      name: 'Active Departments',
+      value: departments.filter((department) => department.is_active).length.toLocaleString(),
       change: '+5.1%',
       changeType: 'increase',
-      icon: FiUsers,
+      icon: FiBriefcase,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
     },
@@ -134,7 +129,7 @@ const Dashboard = () => {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Business Overview</h1>
-        <p className="text-gray-500">Welcome back! Here's what's happening with your business.</p>
+          <p className="text-gray-500">Welcome back! Here's what's happening with factory inventory.</p>
       </div>
 
       {/* Stats Grid */}
@@ -179,9 +174,9 @@ const Dashboard = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Trend */}
+        {/* Issue Value Trend */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend (30 Days)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Value Trend (30 Days)</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dailySales}>
@@ -205,7 +200,7 @@ const Dashboard = () => {
                   tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
                 />
                 <Tooltip
-                  formatter={(value) => [formatCurrency(value), 'Revenue']}
+                  formatter={(value) => [formatCurrency(value), 'Issued Value']}
                   labelFormatter={(label) => new Date(label).toLocaleDateString()}
                 />
                 <Area
@@ -220,32 +215,22 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Payment Methods */}
+        {/* Department Usage */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={paymentMethods}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="total"
-                  nameKey="payment_method"
-                  label={({ payment_method, percent }) =>
-                    `${payment_method}: ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  {paymentMethods.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-              </PieChart>
-            </ResponsiveContainer>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Usage</h3>
+          <div className="space-y-3 max-h-72 overflow-y-auto">
+            {departmentUsage.map((department) => (
+              <div key={department.department_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900">{department.department_name}</p>
+                  <p className="text-sm text-gray-500">{department.count} invoices</p>
+                </div>
+                <p className="font-semibold text-indigo-600">{formatCurrency(department.total)}</p>
+              </div>
+            ))}
+            {departmentUsage.length === 0 && (
+              <p className="text-gray-500 text-center py-8">No department usage yet</p>
+            )}
           </div>
         </div>
       </div>
@@ -266,7 +251,7 @@ const Dashboard = () => {
                   tick={{ fontSize: 11, fill: '#6b7280' }}
                   width={120}
                 />
-                <Tooltip formatter={(value) => [`${value} units`, 'Sold']} />
+                <Tooltip formatter={(value) => [`${value} units`, 'Issued']} />
                 <Bar dataKey="total_quantity" fill="#4f46e5" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -280,19 +265,13 @@ const Dashboard = () => {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <span className="text-gray-600">Average Order Value</span>
               <span className="font-semibold text-gray-900">
-                {formatCurrency(salesStats?.avg_invoice_value)}
+                {formatCurrency(salesStats?.average_invoice_value)}
               </span>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Today's Revenue</span>
+              <span className="text-gray-600">Issued This Period</span>
               <span className="font-semibold text-green-600">
-                {formatCurrency(salesStats?.today_revenue)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Pending Payments</span>
-              <span className="font-semibold text-orange-600">
-                {formatCurrency(salesStats?.pending_amount)}
+                {formatCurrency(salesStats?.total_sales)}
               </span>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

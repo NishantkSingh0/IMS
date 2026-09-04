@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 from .models import Invoice, InvoiceItem, Payment, DailySales, Return
-from inventory.models import Product, StockTransaction
+from inventory.models import Department, Product, StockTransaction
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
@@ -47,12 +47,15 @@ class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceItemSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    department_code = serializers.CharField(source='department.code', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'invoice_number', 'customer', 'customer_name',
+            'department', 'department_name', 'department_code',
             'subtotal', 'discount_amount', 'discount_percentage',
             'tax_amount', 'total_amount', 'paid_amount', 'due_amount',
             'payment_status', 'payment_method', 'payment_reference',
@@ -70,12 +73,15 @@ class InvoiceListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for invoice lists."""
     
     customer_name = serializers.CharField(source='customer.name', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    department_code = serializers.CharField(source='department.code', read_only=True)
     item_count = serializers.IntegerField(source='items.count', read_only=True)
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'invoice_number', 'customer', 'customer_name',
+            'department', 'department_name', 'department_code',
             'total_amount', 'paid_amount', 'due_amount',
             'payment_status', 'payment_method', 'invoice_date',
             'item_count', 'created_at'
@@ -86,15 +92,19 @@ class InvoiceCreateSerializer(serializers.Serializer):
     """Serializer for creating a new invoice."""
     
     customer_id = serializers.IntegerField(required=False, allow_null=True)
+    department_id = serializers.IntegerField()
     items = InvoiceItemCreateSerializer(many=True)
     discount_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, default=0)
-    payment_method = serializers.ChoiceField(choices=Invoice.PAYMENT_METHOD_CHOICES, default='cash')
-    paid_amount = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
     notes = serializers.CharField(required=False, allow_blank=True)
     
     def validate_items(self, value):
         if not value:
             raise serializers.ValidationError("At least one item is required")
+        return value
+
+    def validate_department_id(self, value):
+        if not Department.objects.filter(id=value, is_active=True).exists():
+            raise serializers.ValidationError("Select an active department")
         return value
     
     @transaction.atomic
@@ -102,13 +112,13 @@ class InvoiceCreateSerializer(serializers.Serializer):
         user = self.context['request'].user
         items_data = validated_data.pop('items')
         customer_id = validated_data.pop('customer_id', None)
+        department_id = validated_data.pop('department_id')
         
         # Create invoice
         invoice = Invoice.objects.create(
             customer_id=customer_id,
+            department_id=department_id,
             discount_percentage=validated_data.get('discount_percentage', 0),
-            payment_method=validated_data.get('payment_method', 'cash'),
-            paid_amount=validated_data.get('paid_amount', 0),
             notes=validated_data.get('notes', ''),
             created_by=user
         )
@@ -155,15 +165,10 @@ class InvoiceCreateSerializer(serializers.Serializer):
         
         # Calculate totals
         invoice.calculate_totals()
-        
-        # Create payment record if paid
-        if invoice.paid_amount > 0:
-            Payment.objects.create(
-                invoice=invoice,
-                amount=invoice.paid_amount,
-                payment_method=invoice.payment_method,
-                received_by=user
-            )
+        invoice.paid_amount = invoice.total_amount
+        invoice.due_amount = 0
+        invoice.payment_status = 'paid'
+        invoice.save()
         
         return invoice
 

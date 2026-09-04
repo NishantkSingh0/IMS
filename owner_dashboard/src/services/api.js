@@ -83,7 +83,12 @@ export const inventoryAPI = {
   getStats: () => api.get('/inventory/products/stats/'),
   getCategories: () => api.get('/inventory/categories/'),
   getSuppliers: () => api.get('/inventory/suppliers/'),
-  getTransactions: (params) => api.get('/inventory/transactions/', { params }),
+  getDepartments: (params) => api.get('/inventory/departments/', { params }),
+  getDepartment: (id) => api.get(`/inventory/departments/${id}/`),
+  createDepartment: (data) => api.post('/inventory/departments/', data),
+  updateDepartment: (id, data) => api.patch(`/inventory/departments/${id}/`, data),
+  deleteDepartment: (id) => api.delete(`/inventory/departments/${id}/`),
+  getTransactions: (params) => api.get('/inventory/stock-transactions/', { params }),
 };
 
 // Sales API
@@ -95,17 +100,8 @@ export const salesAPI = {
   getDailySummary: (params) => api.get('/sales/invoices/daily_summary/', { params }),
   getMonthlySummary: (params) => api.get('/sales/invoices/monthly_summary/', { params }),
   getTopProducts: (params) => api.get('/sales/invoices/top_products/', { params }),
-  getByPaymentMethod: (params) => api.get('/sales/invoices/by_payment_method/', { params }),
+  getByDepartment: (params) => api.get('/sales/invoices/by_department/', { params }),
   getDailySales: (params) => api.get('/sales/daily-sales/', { params }),
-};
-
-// CRM API
-export const crmAPI = {
-  getCustomers: (params) => api.get('/crm/customers/', { params }),
-  getCustomer: (id) => api.get(`/crm/customers/${id}/`),
-  getStats: () => api.get('/crm/customers/stats/'),
-  getTopCustomers: (params) => api.get('/crm/customers/top_customers/', { params }),
-  getWithOutstanding: () => api.get('/crm/customers/with_outstanding/'),
 };
 
 export default api;

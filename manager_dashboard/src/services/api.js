@@ -80,6 +80,11 @@ export const inventoryAPI = {
   
   getCategories: () => api.get('/inventory/categories/'),
   getSuppliers: () => api.get('/inventory/suppliers/'),
+  getDepartments: (params) => api.get('/inventory/departments/', { params }),
+  getDepartment: (id) => api.get(`/inventory/departments/${id}/`),
+  createDepartment: (data) => api.post('/inventory/departments/', data),
+  updateDepartment: (id, data) => api.patch(`/inventory/departments/${id}/`, data),
+  deleteDepartment: (id) => api.delete(`/inventory/departments/${id}/`),
   
   getLowStockAlerts: () => api.get('/inventory/low-stock-alerts/unacknowledged/'),
   acknowledgeAlert: (id) => api.post(`/inventory/low-stock-alerts/${id}/acknowledge/`),
@@ -91,24 +96,9 @@ export const salesAPI = {
   getInvoice: (id) => api.get(`/sales/invoices/${id}/`),
   createInvoice: (data) => api.post('/sales/invoices/', data),
   getTodayInvoices: () => api.get('/sales/invoices/today/'),
-  getPendingInvoices: () => api.get('/sales/invoices/pending/'),
-  addPayment: (id, data) => api.post(`/sales/invoices/${id}/add_payment/`, data),
   cancelInvoice: (id) => api.post(`/sales/invoices/${id}/cancel/`),
   getStats: (params) => api.get('/sales/invoices/stats/', { params }),
   getDailySummary: (params) => api.get('/sales/invoices/daily_summary/', { params }),
   getTopProducts: (params) => api.get('/sales/invoices/top_products/', { params }),
-};
-
-// CRM API
-export const crmAPI = {
-  getCustomers: (params) => api.get('/crm/customers/', { params }),
-  getCustomer: (id) => api.get(`/crm/customers/${id}/`),
-  createCustomer: (data) => api.post('/crm/customers/', data),
-  updateCustomer: (id, data) => api.patch(`/crm/customers/${id}/`, data),
-  deleteCustomer: (id) => api.delete(`/crm/customers/${id}/`),
-  getTopCustomers: (params) => api.get('/crm/customers/top_customers/', { params }),
-  getWithOutstanding: () => api.get('/crm/customers/with_outstanding/'),
-  getPurchaseHistory: (id) => api.get(`/crm/customers/${id}/purchase_history/`),
-  getStats: () => api.get('/crm/customers/stats/'),
-  addNote: (id, data) => api.post(`/crm/customers/${id}/add_note/`, data),
+  getByDepartment: (params) => api.get('/sales/invoices/by_department/', { params }),
 };

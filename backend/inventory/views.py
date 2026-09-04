@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.db.models import Sum, F, Count
+from django.db.models import Sum, F
 from django.utils import timezone
-from .models import Category, Supplier, Product, StockTransaction, LowStockAlert
+from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 from .serializers import (
     CategorySerializer, SupplierSerializer, SupplierListSerializer,
+    DepartmentSerializer, DepartmentListSerializer,
     ProductSerializer, ProductListSerializer, StockTransactionSerializer,
     StockAdjustmentSerializer, LowStockAlertSerializer
 )
@@ -26,7 +27,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering = ['name']
     
     def get_queryset(self):
-        return Category.objects.annotate(product_count=Count('products'))
+        return Category.objects.all()
     
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
@@ -60,6 +61,23 @@ class SupplierViewSet(viewsets.ModelViewSet):
         products = supplier.products.filter(is_active=True)
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
+
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    """ViewSet for factory department management."""
+
+    queryset = Department.objects.all()
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['is_active']
+    search_fields = ['name', 'code', 'description']
+    ordering_fields = ['name', 'code', 'created_at']
+    ordering = ['name']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return DepartmentListSerializer
+        return DepartmentSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -218,7 +236,14 @@ class LowStockAlertViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['is_acknowledged']
     ordering = ['-created_at']
-    
+
+    @action(detail=False, methods=['get'])
+    def unacknowledged(self, request):
+        """Get unacknowledged low stock alerts."""
+        alerts = self.queryset.filter(is_acknowledged=False)
+        serializer = self.get_serializer(alerts, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def acknowledge(self, request, pk=None):
         """Acknowledge a low stock alert."""
@@ -228,10 +253,3 @@ class LowStockAlertViewSet(viewsets.ModelViewSet):
         alert.acknowledged_at = timezone.now()
         alert.save()
         return Response(self.get_serializer(alert).data)
-    
-    @action(detail=False, methods=['get'])
-    def unacknowledged(self, request):
-        """Get all unacknowledged alerts."""
-        alerts = self.queryset.filter(is_acknowledged=False)
-        serializer = self.get_serializer(alerts, many=True)
-        return Response(serializer.data)

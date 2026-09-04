@@ -185,7 +185,7 @@ const Inventory = () => {
                   </div>
                   <button
                     onClick={() => openAdjustModal(product)}
-                    className="px-3 py-1.5 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
+                    className="px-3 py-1.5 bg-black text-white text-sm rounded-lg hover:bg-black"
                   >
                     Adjust
                   </button>
@@ -312,7 +312,7 @@ const Inventory = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black"
                 >
                   Save Adjustment
                 </button>

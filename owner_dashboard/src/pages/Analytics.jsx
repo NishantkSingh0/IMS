@@ -14,8 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { FiCalendar, FiDollarSign, FiShoppingCart, FiTrendingUp, FiDownload } from 'react-icons/fi';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { FiDollarSign, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { format } from 'date-fns';
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
@@ -57,8 +57,8 @@ const Analytics = () => {
 
   const calculateGrowth = () => {
     if (monthlySales.length < 2) return 0;
-    const current = monthlySales[monthlySales.length - 1]?.revenue || 0;
-    const previous = monthlySales[monthlySales.length - 2]?.revenue || 1;
+    const current = monthlySales[monthlySales.length - 1]?.total_sales || 0;
+    const previous = monthlySales[monthlySales.length - 2]?.total_sales || 1;
     return ((current - previous) / previous * 100).toFixed(1);
   };
 
@@ -76,7 +76,7 @@ const Analytics = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500">Deep dive into your business metrics</p>
+          <p className="text-gray-500">Deep dive into factory inventory issue metrics</p>
         </div>
         <div className="flex items-center space-x-4">
           <select
@@ -94,20 +94,20 @@ const Analytics = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Total Revenue"
-          value={formatCurrency(stats?.total_revenue)}
+          title="Issued Value"
+          value={formatCurrency(stats?.total_sales)}
           icon={FiDollarSign}
           color="indigo"
         />
         <KPICard
-          title="Total Orders"
+          title="Total Invoices"
           value={stats?.total_invoices || 0}
           icon={FiShoppingCart}
           color="purple"
         />
         <KPICard
-          title="Avg Order Value"
-          value={formatCurrency(stats?.total_revenue / (stats?.total_invoices || 1))}
+          title="Avg Invoice Value"
+          value={formatCurrency(stats?.average_invoice_value)}
           icon={FiTrendingUp}
           color="cyan"
         />
@@ -119,9 +119,9 @@ const Analytics = () => {
         />
       </div>
 
-      {/* Daily Sales Chart */}
+      {/* Daily Issue Chart */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Sales Trend</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Issue Trend</h2>
         <ResponsiveContainer width="100%" height={350}>
           <AreaChart data={dailySales}>
             <defs>
@@ -145,7 +145,7 @@ const Analytics = () => {
             <Tooltip
               labelFormatter={(v) => format(new Date(v), 'MMMM d, yyyy')}
               formatter={(value, name) =>
-                name === 'revenue' ? formatCurrency(value) : value
+                name === 'Issued Value' ? formatCurrency(value) : value
               }
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
             />
@@ -153,22 +153,22 @@ const Analytics = () => {
             <Area
               yAxisId="left"
               type="monotone"
-              dataKey="revenue"
+              dataKey="total_sales"
               stroke="#4f46e5"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorRevenue)"
-              name="Revenue"
+              name="Issued Value"
             />
             <Area
               yAxisId="right"
               type="monotone"
-              dataKey="orders"
+              dataKey="invoice_count"
               stroke="#7c3aed"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorOrders)"
-              name="Orders"
+              name="Invoices"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -177,7 +177,7 @@ const Analytics = () => {
       {/* Monthly Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Issue Value</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={monthlySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -187,13 +187,13 @@ const Analytics = () => {
                 formatter={(value) => formatCurrency(value)}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />
-              <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total_sales" fill="#4f46e5" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Orders</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Invoices</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -204,7 +204,7 @@ const Analytics = () => {
               />
               <Line
                 type="monotone"
-                dataKey="orders"
+                dataKey="invoice_count"
                 stroke="#7c3aed"
                 strokeWidth={3}
                 dot={{ fill: '#7c3aed', strokeWidth: 2 }}

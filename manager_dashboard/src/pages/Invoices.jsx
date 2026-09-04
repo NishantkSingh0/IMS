@@ -3,31 +3,27 @@ import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
 import {
   FiSearch,
-  FiFilter,
   FiEye,
   FiPrinter,
   FiX,
   FiFileText,
-  FiDollarSign,
 } from 'react-icons/fi';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery]);
 
   const fetchInvoices = async () => {
     try {
       const params = {};
       if (searchQuery) params.search = searchQuery;
-      if (statusFilter) params.payment_status = statusFilter;
       
       const response = await salesAPI.getInvoices(params);
       setInvoices(response.data.results || response.data);
@@ -56,16 +52,6 @@ const Invoices = () => {
     }).format(amount || 0);
   };
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      paid: 'bg-green-100 text-green-700',
-      partial: 'bg-yellow-100 text-yellow-700',
-      pending: 'bg-red-100 text-red-700',
-      cancelled: 'bg-gray-100 text-gray-700',
-    };
-    return styles[status] || 'bg-gray-100 text-gray-700';
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -83,21 +69,10 @@ const Invoices = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by invoice number or customer..."
+              placeholder="Search by invoice number or department..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">All Status</option>
-            <option value="paid">Paid</option>
-            <option value="partial">Partial</option>
-            <option value="pending">Pending</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
         </div>
       </div>
 
@@ -121,19 +96,13 @@ const Invoices = () => {
                     Invoice #
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Customer
+                    Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Date
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                     Total
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                    Paid
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                    Status
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                     Actions
@@ -147,7 +116,7 @@ const Invoices = () => {
                       <span className="font-medium text-primary-600">{invoice.invoice_number}</span>
                     </td>
                     <td className="px-6 py-4 text-gray-900">
-                      {invoice.customer_name || 'Walk-in Customer'}
+                      {invoice.department_name || '-'}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {format(new Date(invoice.created_at), 'dd MMM yyyy, hh:mm a')}
@@ -155,22 +124,10 @@ const Invoices = () => {
                     <td className="px-6 py-4 text-right font-medium text-gray-900">
                       {formatCurrency(invoice.total_amount)}
                     </td>
-                    <td className="px-6 py-4 text-right text-gray-600">
-                      {formatCurrency(invoice.paid_amount)}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                          invoice.payment_status
-                        )}`}
-                      >
-                        {invoice.payment_status}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => viewInvoice(invoice.id)}
-                        className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg"
+                        className="p-2 text-gray-500 hover:text-black hover:bg-black-50 rounded-lg"
                         title="View Details"
                       >
                         <FiEye className="w-4 h-4" />
@@ -203,9 +160,9 @@ const Invoices = () => {
               {/* Invoice Header */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-gray-500">Customer</p>
+                  <p className="text-sm text-gray-500">Department</p>
                   <p className="font-medium text-gray-900">
-                    {selectedInvoice.customer_name || 'Walk-in Customer'}
+                    {selectedInvoice.department_name || '-'}
                   </p>
                 </div>
                 <div className="text-right">
@@ -215,20 +172,10 @@ const Invoices = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p className="font-medium text-gray-900 capitalize">
-                    {selectedInvoice.payment_method}
+                  <p className="text-sm text-gray-500">Department Code</p>
+                  <p className="font-medium text-gray-900">
+                    {selectedInvoice.department_code || '-'}
                   </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Status</p>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                      selectedInvoice.payment_status
-                    )}`}
-                  >
-                    {selectedInvoice.payment_status}
-                  </span>
                 </div>
               </div>
 
@@ -295,16 +242,6 @@ const Invoices = () => {
                     {formatCurrency(selectedInvoice.total_amount)}
                   </span>
                 </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Paid</span>
-                  <span>{formatCurrency(selectedInvoice.paid_amount)}</span>
-                </div>
-                {selectedInvoice.due_amount > 0 && (
-                  <div className="flex justify-between text-red-600 font-medium">
-                    <span>Due</span>
-                    <span>{formatCurrency(selectedInvoice.due_amount)}</span>
-                  </div>
-                )}
               </div>
             </div>
             <div className="p-4 border-t flex justify-end space-x-3">
@@ -317,7 +254,7 @@ const Invoices = () => {
               </button>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black"
               >
                 Close
               </button>

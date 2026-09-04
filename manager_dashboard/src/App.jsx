@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Billing from './pages/Billing';
 import Invoices from './pages/Invoices';
-import Customers from './pages/Customers';
+import Departments from './pages/Departments';
 import Inventory from './pages/Inventory';
 
 // Protected Route Component
@@ -48,7 +48,7 @@ function App() {
             <Route path="products" element={<Products />} />
             <Route path="billing" element={<Billing />} />
             <Route path="invoices" element={<Invoices />} />
-            <Route path="customers" element={<Customers />} />
+            <Route path="departments" element={<Departments />} />
             <Route path="inventory" element={<Inventory />} />
           </Route>
         </Routes>

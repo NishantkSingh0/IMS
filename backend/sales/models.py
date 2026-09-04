@@ -26,6 +26,7 @@ class Invoice(models.Model):
     
     invoice_number = models.CharField(max_length=50, unique=True)
     customer = models.ForeignKey('crm.Customer', on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
+    department = models.ForeignKey('inventory.Department', on_delete=models.PROTECT, null=True, blank=True, related_name='invoices')
     
     # Amounts
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)

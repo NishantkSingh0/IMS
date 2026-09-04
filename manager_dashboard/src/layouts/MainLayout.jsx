@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiUsers, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiBell } from 'react-icons/fi';
+import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser } from 'react-icons/fi';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Billing (POS)', href: '/billing', icon: FiShoppingCart },
   { name: 'Products', href: '/products', icon: FiPackage },
   { name: 'Invoices', href: '/invoices', icon: FiFileText },
-  { name: 'Customers', href: '/customers', icon: FiUsers },
+  { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
 ];
 
@@ -73,7 +73,7 @@ const MainLayout = () => {
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-primary-50 text-primary-700'
+                      ? 'bg-black-50 text-black'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`
                 }
@@ -90,7 +90,7 @@ const MainLayout = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <FiUser className="w-5 h-5 text-primary-600" />
+                  <FiUser className="w-5 h-5 text-black" />
                 </div>
               </div>
 

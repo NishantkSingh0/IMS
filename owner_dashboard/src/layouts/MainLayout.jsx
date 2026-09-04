@@ -6,8 +6,7 @@ import {
   FiPieChart,
   FiUsers,
   FiPackage,
-  FiDollarSign,
-  FiUserCheck,
+  FiBriefcase,
   FiMenu,
   FiX,
   FiLogOut,
@@ -23,9 +22,9 @@ const MainLayout = () => {
   const navigation = [
     { name: 'Dashboard', icon: FiHome, path: '/' },
     { name: 'Analytics', icon: FiPieChart, path: '/analytics' },
-    { name: 'Sales Reports', icon: FiTrendingUp, path: '/sales' },
+    { name: 'Issue Reports', icon: FiTrendingUp, path: '/sales' },
     { name: 'Inventory', icon: FiPackage, path: '/inventory' },
-    { name: 'Customers', icon: FiUserCheck, path: '/customers' },
+    { name: 'Departments', icon: FiBriefcase, path: '/departments' },
     { name: 'Staff', icon: FiUsers, path: '/staff' },
   ];
 

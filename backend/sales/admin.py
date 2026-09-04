@@ -15,9 +15,9 @@ class PaymentInline(admin.TabularInline):
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('invoice_number', 'customer', 'total_amount', 'paid_amount', 'payment_status', 'invoice_date')
-    list_filter = ('payment_status', 'payment_method', 'invoice_date')
-    search_fields = ('invoice_number', 'customer__name')
+    list_display = ('invoice_number', 'department', 'total_amount', 'invoice_date')
+    list_filter = ('department', 'invoice_date')
+    search_fields = ('invoice_number', 'department__name', 'department__code')
     readonly_fields = ('invoice_number', 'subtotal', 'tax_amount', 'total_amount', 'due_amount', 'created_at', 'updated_at')
     inlines = [InvoiceItemInline, PaymentInline]
 

@@ -27,15 +27,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4">
+    <div className="min-h-screen from-primary-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-4">
-            <FiBox className="w-8 h-8 text-primary-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4">
+            <img
+              src="/logo.png"
+              alt="BMS Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Store Manager</h1>
-          <p className="text-gray-500 mt-1">Business Management System</p>
+          <h1 className="text-2xl font-bold text-gray-800">Store Manager Login</h1>
+          <p className="text-gray-500 mt-1">Inventory Management System</p>
         </div>
 
         {/* Form */}
@@ -77,7 +81,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 focus:ring-4 focus:ring-primary-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-black focus:ring-4 focus:ring-primary-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -97,8 +101,8 @@ const Login = () => {
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</p>
           <div className="text-sm text-gray-600 space-y-1">
-            <p><strong>Manager:</strong> manager@example.com / manager123</p>
-            <p><strong>Owner:</strong> owner@example.com / owner123</p>
+            <p><strong>Manager:</strong> harvansh@oaknore.in | inventory@oaknore.in / O$1234567890</p>
+            <p><strong>Owner:</strong> admin@oaknore.in / O$1234567890</p>
           </div>
         </div>
       </div>

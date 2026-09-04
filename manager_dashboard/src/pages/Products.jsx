@@ -147,7 +147,7 @@ const Products = () => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition"
+          className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black transition"
         >
           <FiPlus className="w-5 h-5" />
           <span>Add Product</span>
@@ -258,7 +258,7 @@ const Products = () => {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(product)}
-                          className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg"
+                          className="p-2 text-gray-500 hover:text-black hover:bg-black-50 rounded-lg"
                         >
                           <FiEdit2 className="w-4 h-4" />
                         </button>
@@ -445,7 +445,7 @@ const Products = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black"
                 >
                   {editingProduct ? 'Update' : 'Create'}
                 </button>

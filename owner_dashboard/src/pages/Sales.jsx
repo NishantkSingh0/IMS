@@ -5,9 +5,6 @@ import {
   Bar,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -20,9 +17,7 @@ import {
   FiCalendar,
   FiDollarSign,
   FiShoppingCart,
-  FiFilter,
-  FiDownload,
-  FiCreditCard,
+  FiBriefcase,
 } from 'react-icons/fi';
 
 const Sales = () => {
@@ -30,9 +25,8 @@ const Sales = () => {
   const [dateRange, setDateRange] = useState('30');
   const [dailySales, setDailySales] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [departmentUsage, setDepartmentUsage] = useState([]);
   const [recentInvoices, setRecentInvoices] = useState([]);
-  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     fetchSalesData();
@@ -41,19 +35,17 @@ const Sales = () => {
   const fetchSalesData = async () => {
     setLoading(true);
     try {
-      const [dailyRes, topProductsRes, paymentRes, invoicesRes, statsRes] = await Promise.all([
+      const [dailyRes, topProductsRes, departmentRes, invoicesRes] = await Promise.all([
         salesAPI.getDailySummary({ days: parseInt(dateRange) }),
         salesAPI.getTopProducts({ limit: 10, days: parseInt(dateRange) }),
-        salesAPI.getByPaymentMethod({ days: parseInt(dateRange) }),
+        salesAPI.getByDepartment({ days: parseInt(dateRange) }),
         salesAPI.getInvoices({ page_size: 10, ordering: '-created_at' }),
-        salesAPI.getStats(),
       ]);
 
       setDailySales(dailyRes.data || []);
       setTopProducts(topProductsRes.data || []);
-      setPaymentMethods(paymentRes.data || []);
+      setDepartmentUsage(departmentRes.data || []);
       setRecentInvoices(invoicesRes.data?.results || invoicesRes.data || []);
-      setStats(statsRes.data);
     } catch (error) {
       console.error('Error fetching sales data:', error);
     } finally {
@@ -69,17 +61,6 @@ const Sales = () => {
     }).format(amount || 0);
   };
 
-  const COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      paid: 'bg-green-100 text-green-700',
-      partial: 'bg-yellow-100 text-yellow-700',
-      pending: 'bg-red-100 text-red-700',
-    };
-    return styles[status] || 'bg-gray-100 text-gray-700';
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -93,8 +74,8 @@ const Sales = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Reports</h1>
-          <p className="text-gray-500">Detailed sales analytics and reports</p>
+          <h1 className="text-2xl font-bold text-gray-900">Issue Reports</h1>
+          <p className="text-gray-500">Detailed factory inventory issue analytics and reports</p>
         </div>
         <div className="flex items-center space-x-4">
           <select
@@ -115,9 +96,9 @@ const Sales = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Period Revenue</p>
+              <p className="text-sm text-gray-500">Period Issue Value</p>
               <p className="text-2xl font-bold text-indigo-600">
-                {formatCurrency(dailySales.reduce((sum, d) => sum + (d.revenue || 0), 0))}
+                {formatCurrency(dailySales.reduce((sum, d) => sum + (d.total_sales || 0), 0))}
               </p>
             </div>
             <FiDollarSign className="w-8 h-8 text-indigo-400" />
@@ -126,9 +107,9 @@ const Sales = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Period Orders</p>
+              <p className="text-sm text-gray-500">Period Invoices</p>
               <p className="text-2xl font-bold text-purple-600">
-                {dailySales.reduce((sum, d) => sum + (d.orders || 0), 0)}
+                {dailySales.reduce((sum, d) => sum + (d.invoice_count || 0), 0)}
               </p>
             </div>
             <FiShoppingCart className="w-8 h-8 text-purple-400" />
@@ -137,10 +118,10 @@ const Sales = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Avg Daily Sales</p>
+              <p className="text-sm text-gray-500">Avg Daily Issue</p>
               <p className="text-2xl font-bold text-cyan-600">
                 {formatCurrency(
-                  dailySales.reduce((sum, d) => sum + (d.revenue || 0), 0) /
+                  dailySales.reduce((sum, d) => sum + (d.total_sales || 0), 0) /
                     (dailySales.length || 1)
                 )}
               </p>
@@ -151,21 +132,21 @@ const Sales = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Outstanding</p>
+              <p className="text-sm text-gray-500">Departments Used</p>
               <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(stats?.outstanding_amount)}
+                {departmentUsage.length}
               </p>
             </div>
-            <FiCreditCard className="w-8 h-8 text-red-400" />
+            <FiBriefcase className="w-8 h-8 text-red-400" />
           </div>
         </div>
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Sales Chart */}
+        {/* Daily Issue Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Sales</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Issues</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dailySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -184,34 +165,28 @@ const Sales = () => {
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
               />
-              <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total_sales" fill="#4f46e5" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Payment Methods Pie Chart */}
+        {/* Department Usage */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={paymentMethods}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="total"
-                nameKey="method"
-                label={({ method, percent }) => `${method} ${(percent * 100).toFixed(0)}%`}
-              >
-                {paymentMethods.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => formatCurrency(value)} />
-            </PieChart>
-          </ResponsiveContainer>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Department Usage</h2>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {departmentUsage.map((department) => (
+              <div key={department.department_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900">{department.department_name}</p>
+                  <p className="text-sm text-gray-500">{department.count} invoices</p>
+                </div>
+                <p className="font-semibold text-indigo-600">{formatCurrency(department.total)}</p>
+              </div>
+            ))}
+            {departmentUsage.length === 0 && (
+              <p className="text-gray-500 text-center py-8">No department usage yet</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -231,11 +206,11 @@ const Sales = () => {
                     {index + 1}
                   </span>
                   <div>
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.quantity} units sold</p>
+                    <p className="font-medium text-gray-900">{product.product_name}</p>
+                    <p className="text-sm text-gray-500">{product.total_quantity} units issued</p>
                   </div>
                 </div>
-                <p className="font-semibold text-indigo-600">{formatCurrency(product.revenue)}</p>
+                <p className="font-semibold text-indigo-600">{formatCurrency(product.total_revenue)}</p>
               </div>
             ))}
           </div>
@@ -253,7 +228,7 @@ const Sales = () => {
                 <div>
                   <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
                   <p className="text-sm text-gray-500">
-                    {invoice.customer_name || 'Walk-in'} •{' '}
+                    {invoice.department_name || '-'} •{' '}
                     {format(new Date(invoice.created_at), 'MMM d, h:mm a')}
                   </p>
                 </div>
@@ -261,13 +236,6 @@ const Sales = () => {
                   <p className="font-semibold text-gray-900">
                     {formatCurrency(invoice.total_amount)}
                   </p>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full capitalize ${getStatusBadge(
-                      invoice.payment_status
-                    )}`}
-                  >
-                    {invoice.payment_status}
-                  </span>
                 </div>
               </div>
             ))}
