@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, DateFilter
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import TruncDate, TruncMonth
@@ -16,14 +16,24 @@ from .serializers import (
 )
 
 
+class InvoiceFilter(FilterSet):
+    project_name = CharFilter(field_name='project_name', lookup_expr='icontains')
+    created_at_gte = DateFilter(field_name='created_at', lookup_expr='gte')
+    created_at_lte = DateFilter(field_name='created_at', lookup_expr='lte')
+    
+    class Meta:
+        model = Invoice
+        fields = ['department', 'customer', 'created_by', 'project_name']
+
+
 class InvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for Invoice management."""
     
     queryset = Invoice.objects.select_related('customer', 'department', 'created_by').prefetch_related('items', 'payments').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['department', 'customer', 'created_by']
-    search_fields = ['invoice_number', 'department__name', 'department__code', 'notes']
+    filterset_class = InvoiceFilter
+    search_fields = ['invoice_number', 'department__name', 'department__code', 'project_name', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'invoice_date']
     ordering = ['-created_at']
     

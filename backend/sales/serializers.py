@@ -56,6 +56,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'invoice_number', 'customer', 'customer_name',
             'department', 'department_name', 'department_code',
+            'project_name', 'project_created_by',
             'subtotal', 'discount_amount', 'discount_percentage',
             'tax_amount', 'total_amount', 'paid_amount', 'due_amount',
             'payment_status', 'payment_method', 'payment_reference',
@@ -82,6 +83,7 @@ class InvoiceListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'invoice_number', 'customer', 'customer_name',
             'department', 'department_name', 'department_code',
+            'project_name', 'project_created_by',
             'total_amount', 'paid_amount', 'due_amount',
             'payment_status', 'payment_method', 'invoice_date',
             'item_count', 'created_at'
@@ -93,6 +95,8 @@ class InvoiceCreateSerializer(serializers.Serializer):
     
     customer_id = serializers.IntegerField(required=False, allow_null=True)
     department_id = serializers.IntegerField()
+    project_name = serializers.CharField(required=True)
+    project_created_by = serializers.CharField(required=False, allow_blank=True)
     items = InvoiceItemCreateSerializer(many=True)
     discount_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, default=0)
     notes = serializers.CharField(required=False, allow_blank=True)
@@ -106,6 +110,11 @@ class InvoiceCreateSerializer(serializers.Serializer):
         if not Department.objects.filter(id=value, is_active=True).exists():
             raise serializers.ValidationError("Select an active department")
         return value
+
+    def validate_project_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Project name is required")
+        return value.strip()
     
     @transaction.atomic
     def create(self, validated_data):
@@ -113,11 +122,15 @@ class InvoiceCreateSerializer(serializers.Serializer):
         items_data = validated_data.pop('items')
         customer_id = validated_data.pop('customer_id', None)
         department_id = validated_data.pop('department_id')
+        project_name = validated_data.pop('project_name')
+        project_created_by = validated_data.pop('project_created_by', '')
         
         # Create invoice
         invoice = Invoice.objects.create(
             customer_id=customer_id,
             department_id=department_id,
+            project_name=project_name,
+            project_created_by=project_created_by,
             discount_percentage=validated_data.get('discount_percentage', 0),
             notes=validated_data.get('notes', ''),
             created_by=user
