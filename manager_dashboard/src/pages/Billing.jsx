@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { inventoryAPI, salesAPI } from '../services/api';
+import { inventoryAPI, salesAPI, projectsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
   FiSearch,
@@ -8,15 +8,18 @@ import {
   FiTrash2,
   FiBriefcase,
   FiPercent,
+  FiFolder,
 } from 'react-icons/fi';
 
 const Billing = () => {
   const [products, setProducts] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [cart, setCart] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedProject, setSelectedProject] = useState('');
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
   const searchInputRef = useRef(null);
@@ -24,6 +27,7 @@ const Billing = () => {
   useEffect(() => {
     fetchProducts();
     fetchDepartments();
+    fetchProjects();
   }, []);
 
   useEffect(() => {
@@ -55,6 +59,35 @@ const Billing = () => {
       setDepartments(response.data.results || response.data);
     } catch (error) {
       console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      // TEMPORARY: Hardcoded projects for testing
+      // const response = await projectsAPI.getProjects();
+      // const projectsData = response.data.results || response.data || [];
+      
+      const hardcodedProjects = [
+        { id: 1, project_name: 'NELSON BED', created_by_name: 'Nishant Kumar' },
+        { id: 2, project_name: 'Harper Sofa (Fabric2)', created_by_name: 'BOT' },
+        { id: 3, project_name: 'NOVA BOOKSHELF', created_by_name: 'BOT' },
+        { id: 4, project_name: 'RELAX CHAIR', created_by_name: 'BOT' },
+        { id: 5, project_name: 'NIGHT TABLE', created_by_name: 'BOT' },
+        { id: 6, project_name: 'LOW CABINET', created_by_name: 'BOT' },
+        { id: 7, project_name: 'MNZ POUF WITH TRAY', created_by_name: 'Aditi marchanda' },
+        { id: 8, project_name: 'BASTIEN BED SIDE NIGHT TABLE', created_by_name: 'Rajender Kumar' },
+      ];
+      
+      setProjects(hardcodedProjects);
+      
+      // Original external API call (commented out for testing)
+      // const response = await projectsAPI.getProjects();
+      // const projectsData = response.data.results || response.data || [];
+      // setProjects(projectsData);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
     }
   };
 
@@ -151,10 +184,20 @@ const Billing = () => {
       return;
     }
 
+    if (!selectedProject) {
+      toast.error('Please select a project');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Find the selected project to get created_by_name
+      const project = projects.find(p => p.project_name === selectedProject || p.id === selectedProject);
+      
       const invoiceData = {
         department_id: parseInt(selectedDepartment),
+        project_name: project?.project_name || selectedProject,
+        project_created_by: project?.created_by_name || '',
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
@@ -170,6 +213,7 @@ const Billing = () => {
       // Reset
       setCart([]);
       setSelectedDepartment('');
+      setSelectedProject('');
       setDiscount(0);
       searchInputRef.current?.focus();
     } catch (error) {
@@ -327,6 +371,28 @@ const Billing = () => {
           </div>
         </div>
 
+        {/* Project Selection */}
+        <div className="p-4 border-b">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Project
+          </label>
+          <div className="relative">
+            <FiFolder className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">Select Project</option>
+              {projects.map((project) => (
+                <option key={project.id || project.project_name} value={project.project_name}>
+                  {project.project_name} {project.created_by_name ? `(by ${project.created_by_name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Order Summary */}
         <div className="flex-1 p-4 space-y-4 overflow-y-auto">
           <h3 className="font-semibold text-gray-900">Order Summary</h3>
@@ -369,8 +435,8 @@ const Billing = () => {
         <div className="p-4 border-t space-y-3">
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || !selectedDepartment || loading}
-            className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 rounded-lg font-medium hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cart.length === 0 || !selectedDepartment || !selectedProject || loading}
+            className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FiBriefcase className="w-5 h-5" />
             <span>{loading ? 'Processing...' : 'Issue to Department'}</span>

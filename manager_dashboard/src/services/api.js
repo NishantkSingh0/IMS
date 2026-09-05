@@ -102,3 +102,15 @@ export const salesAPI = {
   getTopProducts: (params) => api.get('/sales/invoices/top_products/', { params }),
   getByDepartment: (params) => api.get('/sales/invoices/by_department/', { params }),
 };
+
+// External Projects API
+const PROJECTS_API_URL = 'https://coaknore-production.up.railway.app/api';
+
+export const projectsAPI = {
+  getProjects: (params = {}) => {
+    const defaultParams = { page: 1, page_size: 20 };
+    return axios.get(`${PROJECTS_API_URL}/projects`, { 
+      params: { ...defaultParams, ...params } 
+    });
+  },
+};

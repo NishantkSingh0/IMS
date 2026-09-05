@@ -131,8 +131,8 @@ const Login = () => {
           <div className="mt-8 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
             <p className="text-sm font-medium text-indigo-800 mb-2">Demo Credentials (Owner Only)</p>
             <div className="text-sm text-indigo-600">
-              <p>Email: <code className="bg-indigo-100 px-1 rounded">owner@example.com</code></p>
-              <p>Password: <code className="bg-indigo-100 px-1 rounded">owner123</code></p>
+              <p>Email: <code className="bg-indigo-100 px-1 rounded">admin@oaknore.in</code></p>
+              <p>Password: <code className="bg-indigo-100 px-1 rounded">O$1234567890</code></p>
             </div>
           </div>
         </div>

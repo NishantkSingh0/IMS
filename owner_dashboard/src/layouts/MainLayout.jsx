@@ -45,13 +45,13 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-indigo-900 to-purple-900 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-black transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-4 border-b border-indigo-700">
+          <div className="flex items-center justify-between p-4 border-b border-gray-600">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
                 <img
@@ -66,7 +66,7 @@ const MainLayout = () => {
               </div>
             </div>
             <button
-              className="lg:hidden text-white hover:text-indigo-200"
+              className="lg:hidden text-white hover:text-gray-200"
               onClick={() => setSidebarOpen(false)}
             >
               <FiX className="w-6 h-6" />
@@ -82,8 +82,8 @@ const MainLayout = () => {
                 className={({ isActive }) =>
                   `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-white text-indigo-900 shadow-lg'
-                      : 'text-indigo-100 hover:bg-indigo-800'
+                      ? 'bg-gray-200 text-indigo-900 shadow-lg'
+                      : 'text-indigo-100 hover:bg-gray-800'
                   }`
                 }
                 onClick={() => setSidebarOpen(false)}
@@ -95,25 +95,31 @@ const MainLayout = () => {
           </nav>
 
           {/* User Section */}
-          <div className="p-4 border-t border-indigo-700">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-indigo-700 rounded-full flex items-center justify-center">
+          <div className="p-4 border-t border-gray-600">
+            <div className="flex items-center space-x-3">
+              {/* User */}
+              <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
                 <FiUser className="w-5 h-5 text-white" />
               </div>
+
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium truncate">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <p className="text-indigo-200 text-sm capitalize">{user?.role}</p>
+                <p className="text-indigo-200 text-sm capitalize truncate">
+                  {user?.role}
+                </p>
               </div>
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center p-2 text-indigo-100 hover:bg-indigo-800 rounded-lg transition flex-shrink-0"
+                title="Logout"
+              >
+                <FiLogOut className="w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-2 w-full px-4 py-2 text-indigo-100 hover:bg-indigo-800 rounded-lg transition"
-            >
-              <FiLogOut className="w-5 h-5" />
-              <span>Logout</span>
-            </button>
           </div>
         </div>
       </aside>

@@ -7,7 +7,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Billing (POS)', href: '/billing', icon: FiShoppingCart },
   { name: 'Products', href: '/products', icon: FiPackage },
-  { name: 'Invoices', href: '/invoices', icon: FiFileText },
+  { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
 ];

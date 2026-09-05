@@ -124,18 +124,36 @@ const Inventory = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Products by Category</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
+            <PieChart
+              width={800}
+              height={400}
+              margin={{ top: 20, right: 80, bottom: 20, left: 80 }}
+            >
               <Pie
                 data={categoryData}
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
+                outerRadius={90}
                 dataKey="count"
                 nameKey="name"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+                labelLine={{
+                  strokeWidth: 1,
+                  length: 10,
+                  length2: 10,
+                }}
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                }}
               >
                 {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -150,11 +168,23 @@ const Inventory = () => {
             <BarChart
               data={products.slice(0, 8)}
               layout="vertical"
-              margin={{ left: 80, right: 20 }}
+              margin={{ left: 0, right: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" stroke="#6b7280" />
-              <YAxis dataKey="name" type="category" stroke="#6b7280" width={80} tick={{ fontSize: 12 }} />
+
+              <XAxis
+                type="number"
+                stroke="#6b7280"
+              />
+
+              <YAxis
+                dataKey="name"
+                type="category"
+                stroke="#6b7280"
+                width={100}
+                tick={{ fontSize: 11 }}
+              />
+
               <Tooltip
                 contentStyle={{
                   borderRadius: '8px',
@@ -162,7 +192,13 @@ const Inventory = () => {
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
               />
-              <Bar dataKey="current_stock" fill="#4f46e5" radius={[0, 4, 4, 0]} name="Current Stock" />
+
+              <Bar
+                dataKey="current_stock"
+                fill="#111827"
+                radius={[0, 4, 4, 0]}
+                name="Current Stock"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -238,7 +274,7 @@ const Inventory = () => {
       </div>
 
       {/* Categories Summary */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      {/* <div className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {categories.map((category) => (
@@ -252,7 +288,7 @@ const Inventory = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

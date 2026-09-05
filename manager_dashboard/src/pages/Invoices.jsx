@@ -7,23 +7,32 @@ import {
   FiPrinter,
   FiX,
   FiFileText,
+  FiFilter,
+  FiCalendar,
+  FiRefreshCw,
 } from 'react-icons/fi';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchQuery]);
+  }, [searchQuery, projectFilter, fromDate, toDate]);
 
   const fetchInvoices = async () => {
     try {
       const params = {};
       if (searchQuery) params.search = searchQuery;
+      if (projectFilter) params.project_name = projectFilter;
+      if (fromDate) params.created_at_gte = fromDate;
+      if (toDate) params.created_at_lte = toDate;
       
       const response = await salesAPI.getInvoices(params);
       setInvoices(response.data.results || response.data);
@@ -52,27 +61,129 @@ const Invoices = () => {
     }).format(amount || 0);
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setProjectFilter('');
+    setFromDate('');
+    setToDate('');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Department Invoices</h1>
-        <p className="text-gray-500">View and manage all department invoices</p>
+        <h1 className="text-2xl font-bold text-gray-900">Outward Slips</h1>
+        <p className="text-gray-500">View all department Outwards</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by invoice number or department..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+
+          {(searchQuery || projectFilter || fromDate || toDate) && (
+            <button
+              onClick={clearFilters}
+              className="text-xs font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition"
+            >
+              <FiRefreshCw className="w-3.5 h-3.5" />
+              Reset
+            </button>
+          )}
+        </div>
+
+
+        {/* Search Area */}
+        <div className="flex flex-col xl:flex-row gap-4">
+
+          {/* Invoice Number — Larger / Primary */}
+          <div className="flex-[1.4]">
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              Department Name / Invoice Number 
+            </label>
+
+            <div className="relative">
+              <FiSearch
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              />
+
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search department name or invoice number..."
+                className="w-full h-11 pl-10 pr-4 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+              />
+            </div>
           </div>
+
+
+          {/* Project — Medium */}
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              Project Name
+            </label>
+
+            <div className="relative">
+              <FiFilter
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              />
+
+              <input
+                type="text"
+                value={projectFilter}
+                onChange={(e) => setProjectFilter(e.target.value)}
+                placeholder="Search project..."
+                className="w-full h-11 pl-10 pr-4 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+              />
+            </div>
+          </div>
+
+
+          {/* Date Range — Grouped */}
+          <div className="flex-[1.25]">
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              Date Range
+            </label>
+
+            <div className="flex items-center gap-2">
+
+              {/* From */}
+              <div className="relative flex-1">
+                <FiCalendar
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                />
+
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full h-11 pl-9 pr-2 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+                />
+              </div>
+
+              <span className="text-gray-400 text-xs font-medium">
+                to
+              </span>
+
+              {/* To */}
+              <div className="relative flex-1">
+                <FiCalendar
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                />
+
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full h-11 pl-9 pr-2 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
+                />
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -99,6 +210,9 @@ const Invoices = () => {
                     Department
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Project
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Date
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
@@ -118,6 +232,9 @@ const Invoices = () => {
                     <td className="px-6 py-4 text-gray-900">
                       {invoice.department_name || '-'}
                     </td>
+                    <td className="px-6 py-4 text-gray-900">
+                      {invoice.project_name || '-'}
+                    </td>
                     <td className="px-6 py-4 text-gray-500">
                       {format(new Date(invoice.created_at), 'dd MMM yyyy, hh:mm a')}
                     </td>
@@ -127,7 +244,7 @@ const Invoices = () => {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => viewInvoice(invoice.id)}
-                        className="p-2 text-gray-500 hover:text-black hover:bg-black-50 rounded-lg"
+                        className="p-2 text-gray-500 hover:text-black hover:bg-gray-50 rounded-lg"
                         title="View Details"
                       >
                         <FiEye className="w-4 h-4" />
@@ -177,6 +294,20 @@ const Invoices = () => {
                     {selectedInvoice.department_code || '-'}
                   </p>
                 </div>
+                <div>
+                  <p className="text-sm text-gray-500">Project</p>
+                  <p className="font-medium text-gray-900">
+                    {selectedInvoice.project_name || '-'}
+                  </p>
+                </div>
+                {selectedInvoice.project_created_by && (
+                  <div>
+                    <p className="text-sm text-gray-500">Project Created By</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedInvoice.project_created_by}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Invoice Items */}
@@ -254,7 +385,7 @@ const Invoices = () => {
               </button>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black"
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
               >
                 Close
               </button>

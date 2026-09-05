@@ -126,10 +126,10 @@ class InvoiceItem(models.Model):
         return f"{self.product_name} x {self.quantity}"
     
     def save(self, *args, **kwargs):
-        # Calculate item total
-        subtotal = (self.unit_price * self.quantity) - self.discount
-        self.tax_amount = subtotal * (self.tax_rate / 100)
-        self.total = subtotal + self.tax_amount
+        # Calculate item total (without tax)
+        self.total = (self.unit_price * self.quantity) - self.discount
+        # Calculate tax amount separately
+        self.tax_amount = self.total * (self.tax_rate / 100)
         super().save(*args, **kwargs)
 
 

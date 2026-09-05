@@ -244,15 +244,23 @@ const Dashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topProducts} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: '#6b7280' }} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 12, fill: '#6b7280' }}
+                />
                 <YAxis
                   type="category"
                   dataKey="product__name"
                   tick={{ fontSize: 11, fill: '#6b7280' }}
-                  width={120}
+                  width={40}
                 />
                 <Tooltip formatter={(value) => [`${value} units`, 'Issued']} />
-                <Bar dataKey="total_quantity" fill="#4f46e5" radius={[0, 4, 4, 0]} />
+
+                <Bar
+                  dataKey="total_quantity"
+                  fill="#000000"
+                  radius={[0, 4, 4, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
