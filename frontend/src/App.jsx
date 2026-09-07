@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <BrowserRouter>
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
