@@ -1,0 +1,3 @@
+SKU's are not being auto generate
+COst Price is the Selling Price
+Remove Barcode System and logics

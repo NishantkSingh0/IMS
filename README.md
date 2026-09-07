@@ -1,4 +1,4 @@
-📦 Business Management System (BMS)
+📦 Inventory Management System (IMS)
 
 A complete web-based platform for managing inventory, billing, sales, CRM, staff, and analytics — with separate dashboards for Store Managers and Business Owners.
 
@@ -6,7 +6,7 @@ A complete web-based platform for managing inventory, billing, sales, CRM, staff
 
 🚀 Overview
 
-The Business Management System (BMS) is a full-stack, production-style platform built using:
+The Inventory Management System (IMS) is a full-stack, production-style platform built using:
 	•	React + TailwindCSS (Web Dashboards)
 	•	Django REST Framework (Backend)
 	•	PostgreSQL (Database)
