@@ -5,4 +5,8 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   base: '/IMS/',
+  build: {
+    outDir: '../docs',
+    emptyOutDir: true,
+  },
 })
