@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Sum, Count
+from django.conf import settings
+from django.core.cache import cache
 from .models import Customer, CustomerHistory, CustomerNote
 from .serializers import (
     CustomerSerializer, CustomerListSerializer, CustomerHistorySerializer,
@@ -14,7 +16,7 @@ from .serializers import (
 
 class CustomerViewSet(viewsets.ModelViewSet):
     """ViewSet for Customer management."""
-    
+
     queryset = Customer.objects.all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -22,11 +24,46 @@ class CustomerViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'email', 'phone', 'company_name']
     ordering_fields = ['name', 'total_purchases', 'outstanding_amount', 'created_at']
     ordering = ['name']
+
+    def get_queryset(self):
+        return Customer.objects.all()
     
     def get_serializer_class(self):
         if self.action == 'list':
             return CustomerListSerializer
         return CustomerSerializer
+    
+    def list(self, request, *args, **kwargs):
+        # Only cache unfiltered list
+        has_filters = any(request.query_params.get(key) for key in ['search', 'customer_type', 'city', 'is_active'])
+
+        if not has_filters:
+            cache_key = 'customers_list'
+            cached_data = cache.get(cache_key)
+            if cached_data is not None:
+                return Response(cached_data)
+
+            queryset = self.filter_queryset(self.get_queryset())
+            serializer = self.get_serializer(queryset, many=True)
+            cache.set(cache_key, serializer.data, settings.CACHE_TIMEOUTS.get('customers', 300))
+            return Response(serializer.data)
+
+        # For filtered/searched results, don't cache
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        serializer.save()
+        cache.delete('customers_list')
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete('customers_list')
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete('customers_list')
     
     @action(detail=False, methods=['get'])
     def with_outstanding(self, request):

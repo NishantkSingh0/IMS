@@ -19,11 +19,22 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 
 class InvoiceItemCreateSerializer(serializers.Serializer):
     """Serializer for creating invoice items."""
-    
+
     product_id = serializers.IntegerField()
-    quantity = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=1, max_value=10000)
     unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    discount = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = serializers.DecimalField(max_digits=10, decimal_places=2, default=0, min_value=0)
+
+    def validate_product_id(self, value):
+        from inventory.models import Product
+        if not Product.objects.filter(id=value, is_active=True).exists():
+            raise serializers.ValidationError("Product not found or inactive")
+        return value
+
+    def validate_discount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Discount cannot be negative")
+        return value
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -92,18 +103,20 @@ class InvoiceListSerializer(serializers.ModelSerializer):
 
 class InvoiceCreateSerializer(serializers.Serializer):
     """Serializer for creating a new invoice."""
-    
+
     customer_id = serializers.IntegerField(required=False, allow_null=True)
     department_id = serializers.IntegerField()
     project_name = serializers.CharField(required=True)
-    project_created_by = serializers.CharField(required=False, allow_blank=True)
+    project_created_by = serializers.CharField(required=False, allow_blank=True, max_length=200)
     items = InvoiceItemCreateSerializer(many=True)
-    discount_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, default=0)
-    notes = serializers.CharField(required=False, allow_blank=True)
-    
+    discount_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, default=0, min_value=0, max_value=100)
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+
     def validate_items(self, value):
-        if not value:
+        if not value or len(value) == 0:
             raise serializers.ValidationError("At least one item is required")
+        if len(value) > 100:
+            raise serializers.ValidationError("Cannot add more than 100 items in a single invoice")
         return value
 
     def validate_department_id(self, value):
@@ -114,7 +127,16 @@ class InvoiceCreateSerializer(serializers.Serializer):
     def validate_project_name(self, value):
         if not value or not value.strip():
             raise serializers.ValidationError("Project name is required")
+        if len(value) > 200:
+            raise serializers.ValidationError("Project name cannot exceed 200 characters")
         return value.strip()
+
+    def validate_customer_id(self, value):
+        if value:
+            from crm.models import Customer
+            if not Customer.objects.filter(id=value, is_active=True).exists():
+                raise serializers.ValidationError("Customer not found or inactive")
+        return value
     
     @transaction.atomic
     def create(self, validated_data):

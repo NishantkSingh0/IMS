@@ -5,7 +5,7 @@ Management command to load comprehensive mock data for the BMS system.
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 import random
 from decimal import Decimal
 
@@ -21,11 +21,33 @@ class Command(BaseCommand):
         self.create_users()
         self.create_categories()
         self.create_suppliers()
+        self.create_departments()
         self.create_products()
         self.create_customers()
         self.create_invoices()
         
+        # Clear all relevant caches to ensure fresh data
+        self.clear_all_caches()
+        
         self.stdout.write(self.style.SUCCESS('Successfully loaded all mock data!'))
+
+    def clear_all_caches(self):
+        """Clear all application caches to ensure fresh data."""
+        from django.core.cache import cache
+        
+        cache_keys = [
+            'categories_list',
+            'suppliers_list', 
+            'departments_list',
+            'products_list',
+            'inventory_stats',
+            'staff_stats',
+        ]
+        
+        for key in cache_keys:
+            cache.delete(key)
+        
+        self.stdout.write('Cleared all application caches')
 
     def create_users(self):
         """Create demo users."""
@@ -47,7 +69,7 @@ class Command(BaseCommand):
                 'password': 'O$1234567890',
                 'first_name': 'Harvansh',
                 'last_name': 'Kumar',
-                'role': 'Manager',
+                'role': 'manager',
                 'phone': '6396003413',
             },
             {
@@ -74,8 +96,9 @@ class Command(BaseCommand):
                 self.stdout.write(f'User already exists: {user.email}')
 
     def create_categories(self):
-        """Create product categories."""
+        """Create product categories with cache invalidation."""
         from inventory.models import Category
+        from django.core.cache import cache
         
         categories = [
             {'name': 'Plywood & Boards', 'description': 'Plywood, MDF, laminates, and engineered wood boards'},
@@ -91,11 +114,15 @@ class Command(BaseCommand):
         for cat_data in categories:
             Category.objects.get_or_create(name=cat_data['name'], defaults=cat_data)
         
+        # Clear categories cache
+        cache.delete('categories_list')
+        
         self.stdout.write(f'Created {len(categories)} categories')
 
     def create_suppliers(self):
-        """Create suppliers."""
+        """Create suppliers with cache invalidation."""
         from inventory.models import Supplier
+        from django.core.cache import cache
         
         suppliers = [
             {'name': 'National Board & Plywood Supply', 'contact_person': 'Suresh Gupta', 'email': 'suresh@nationalboards.example.com', 'phone': '9811111111', 'address': '123 Industrial Area', 'city': 'Bengaluru', 'state': 'Karnataka', 'pincode': '560001', 'gst_number': '29AAACB1234F1ZV'},
@@ -110,11 +137,78 @@ class Command(BaseCommand):
         for sup_data in suppliers:
             Supplier.objects.get_or_create(name=sup_data['name'], defaults=sup_data)
         
+        # Clear suppliers cache
+        cache.delete('suppliers_list')
+        
         self.stdout.write(f'Created {len(suppliers)} suppliers')
 
+    def create_departments(self):
+        """Create departments with optimized DB queries and cache invalidation."""
+        from inventory.models import Department
+        from django.core.cache import cache
+        
+        departments = [
+            {
+                'name': 'Carpentry',
+                'code': 'CARP',
+                'description': 'Custom woodwork, furniture manufacturing, repairs, and finishing.'
+            },
+            {
+                'name': 'Design',
+                'code': 'DSGN',
+                'description': 'Creates visual concepts, user experiences, and aesthetic standards that shape products, brands, and communications.'
+            },
+            {
+                'name': 'Metal',
+                'code': 'METL',
+                'description': 'Fabrication, welding, shaping, and finishing of metal components and structures'
+            },
+            {
+                'name': 'Polishing',
+                'code': 'POLI',
+                'description': 'Surface finishing, buffing, and restoration to achieve a smooth, refined appearance.'
+            },
+            {
+                'name': 'Stone',
+                'code': 'STON',
+                'description': 'Cutting, shaping, installation, and finishing of marble, granite, and other stones.'
+            },
+            {
+                'name': 'Upholstry',
+                'code': 'UPHO',
+                'description': 'Furniture cushioning, fabric/leather fitting, repair, and reupholstering.'
+            },
+        ]
+        
+        # Use bulk_create with get_or_create pattern for better performance
+        created_count = 0
+        for dept_data in departments:
+            department, created = Department.objects.get_or_create(
+                code=dept_data['code'],
+                defaults=dept_data
+            )
+            if created:
+                created_count += 1
+                self.stdout.write(f'Created department: {department.name}')
+            else:
+                # Update description if department exists but might have different description
+                if department.description != dept_data['description']:
+                    department.description = dept_data['description']
+                    department.save()
+                    self.stdout.write(f'Updated department: {department.name}')
+                else:
+                    self.stdout.write(f'Department already exists: {department.name}')
+        
+        # Clear the departments cache to ensure API returns fresh data
+        cache.delete('departments_list')
+        self.stdout.write('Cleared departments cache')
+        
+        self.stdout.write(f'Created {created_count} new departments')
+
     def create_products(self):
-        """Create manufacturing raw materials and workshop consumables."""
+        """Create manufacturing raw materials and workshop consumables with cache invalidation."""
         from inventory.models import Product, Category, Supplier
+        from django.core.cache import cache
         
         categories = {cat.name: cat for cat in Category.objects.all()}
         suppliers = list(Supplier.objects.all())
@@ -193,6 +287,10 @@ class Command(BaseCommand):
                 }
             )
         
+        # Clear products cache
+        cache.delete('products_list')
+        cache.delete('inventory_stats')
+        
         self.stdout.write(f'Created {len(products_data)} products')
 
     def create_customers(self):
@@ -227,12 +325,13 @@ class Command(BaseCommand):
     def create_invoices(self):
         """Create invoices with items for the past 3 months."""
         from sales.models import Invoice, InvoiceItem, Payment
-        from inventory.models import Product, StockTransaction
+        from inventory.models import Product, StockTransaction, Department
         from crm.models import Customer
         from staff.models import User
         
         customers = list(Customer.objects.all())
         products = list(Product.objects.filter(is_active=True))
+        departments = list(Department.objects.filter(is_active=True))
         staff = list(User.objects.filter(role__in=['manager', 'cashier']))
         
         if not staff:
@@ -255,20 +354,30 @@ class Command(BaseCommand):
                 customer = random.choice(customers) if random.random() > 0.3 else None
                 created_by = random.choice(staff)
                 payment_method = random.choice(payment_methods)
+                department = random.choice(departments) if departments and random.random() > 0.4 else None
+                
+                # Generate project name for department invoices
+                project_name = ''  # Always provide empty string to avoid NOT NULL constraint
+                project_created_by = ''
+                if department:
+                    project_name = random.choice(['NELSON BED', 'Harper Sofa (Fabric2)', 'NOVA BOOKSHELF', 'RELAX CHAIR', 'NIGHT TABLE', 'LOW CABINET', 'MNZ POUF WITH TRAY', 'BASTIEN BED SIDE NIGHT TABLE'])
+                    project_created_by = random.choice(['Nishant Singh', 'Aditi Marchanda', 'Rajender Kumar', 'Bot'])
                 
                 invoice = Invoice.objects.create(
                     customer=customer,
+                    department=department,
+                    project_name=project_name,
+                    project_created_by=project_created_by,
                     payment_method=payment_method,
                     notes=f'Sale on {invoice_date}',
                     created_by=created_by,
                 )
                 
-                # Override the auto-created date
+                # Override the auto-created date with timezone awareness
+                from django.utils.timezone import make_aware
                 Invoice.objects.filter(pk=invoice.pk).update(
                     invoice_date=invoice_date,
-                    created_at=timezone.make_aware(
-                        timezone.datetime.combine(invoice_date, timezone.datetime.now().time())
-                    )
+                    created_at=make_aware(datetime.combine(invoice_date, datetime.now().time()))
                 )
                 
                 # Add 1-5 items per invoice

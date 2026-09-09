@@ -7,6 +7,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
+from django.conf import settings
+from django.core.cache import cache
 from datetime import timedelta
 from .models import Invoice, InvoiceItem, Payment, DailySales, Return
 from .serializers import (
@@ -28,7 +30,7 @@ class InvoiceFilter(FilterSet):
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for Invoice management."""
-    
+
     queryset = Invoice.objects.select_related('customer', 'department', 'created_by').prefetch_related('items', 'payments').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -36,16 +38,78 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     search_fields = ['invoice_number', 'department__name', 'department__code', 'project_name', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'invoice_date']
     ordering = ['-created_at']
-    
+
     def get_serializer_class(self):
         if self.action == 'list':
             return InvoiceListSerializer
         if self.action == 'create':
             return InvoiceCreateSerializer
         return InvoiceSerializer
-    
+
+    def list(self, request, *args, **kwargs):
+        # Only cache unfiltered list (first page, no filters)
+        has_filters = any(request.query_params.get(key) for key in ['search', 'department', 'customer', 'created_by', 'project_name', 'created_at_gte', 'created_at_lte'])
+        page = request.query_params.get('page')
+
+        if not has_filters and (not page or page == '1'):
+            cache_key = 'invoices_list_page1'
+            cached_data = cache.get(cache_key)
+            if cached_data is not None:
+                return Response(cached_data)
+
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                response_data = self.get_paginated_response(serializer.data).data
+                cache.set(cache_key, response_data, 60)  # Cache for 1 minute only
+                return Response(response_data)
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        # For filtered/searched/paginated results, don't cache
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         serializer.save()
+        cache.delete('invoices_list_page1')
+        # Invalidate all sales stats caches
+        cache.delete_many([cache.make_key(k) for k in cache.keys('sales_stats_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete('invoices_list_page1')
+        # Invalidate all sales stats caches
+        cache.delete_many([cache.make_key(k) for k in cache.keys('sales_stats_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete('invoices_list_page1')
+        # Invalidate all sales stats caches
+        cache.delete_many([cache.make_key(k) for k in cache.keys('sales_stats_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
+        cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -107,14 +171,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Get sales statistics."""
-        # Date range filter
+        # Cache stats response with days parameter
         days = int(request.query_params.get('days', 30))
+        cache_key = f'sales_stats_{days}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # Date range filter
         start_date = timezone.now().date() - timedelta(days=days)
-        
+
         queryset = self.queryset.filter(
             invoice_date__gte=start_date,
         ).exclude(payment_status='cancelled')
-        
+
         stats = queryset.aggregate(
             total_sales=Sum('total_amount'),
             total_invoices=Count('id'),
@@ -123,27 +193,33 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             pending_amount=Sum('due_amount'),
             average_invoice_value=Avg('total_amount')
         )
-        
+
         # Items sold
         items_sold = InvoiceItem.objects.filter(
             invoice__in=queryset
         ).aggregate(total=Sum('quantity'))['total'] or 0
-        
+
         stats['total_items_sold'] = items_sold
-        
+
         # Fill nulls with 0
         for key in stats:
             if stats[key] is None:
                 stats[key] = 0
-        
+
+        cache.set(cache_key, stats, settings.CACHE_TIMEOUTS.get('stats', 60))
         return Response(stats)
     
     @action(detail=False, methods=['get'])
     def daily_summary(self, request):
         """Get daily sales summary."""
         days = int(request.query_params.get('days', 30))
+        cache_key = f'daily_summary_{days}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         start_date = timezone.now().date() - timedelta(days=days)
-        
+
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
         ).exclude(payment_status='cancelled').annotate(
@@ -153,15 +229,22 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             invoice_count=Count('id'),
             total_tax=Sum('tax_amount')
         ).order_by('date')
-        
-        return Response(list(summary))
+
+        result = list(summary)
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
     
     @action(detail=False, methods=['get'])
     def monthly_summary(self, request):
         """Get monthly sales summary."""
         months = int(request.query_params.get('months', 12))
+        cache_key = f'monthly_summary_{months}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         start_date = timezone.now().date() - timedelta(days=months * 30)
-        
+
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
         ).exclude(payment_status='cancelled').annotate(
@@ -171,16 +254,23 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             invoice_count=Count('id'),
             total_tax=Sum('tax_amount')
         ).order_by('month')
-        
-        return Response(list(summary))
+
+        result = list(summary)
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
     
     @action(detail=False, methods=['get'])
     def top_products(self, request):
         """Get top selling products."""
         days = int(request.query_params.get('days', 30))
         limit = int(request.query_params.get('limit', 10))
+        cache_key = f'top_products_{days}_{limit}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         start_date = timezone.now().date() - timedelta(days=days)
-        
+
         top_products = InvoiceItem.objects.filter(
             invoice__invoice_date__gte=start_date,
         ).exclude(invoice__payment_status='cancelled').values(
@@ -189,15 +279,22 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             total_quantity=Sum('quantity'),
             total_revenue=Sum('total')
         ).order_by('-total_quantity')[:limit]
-        
-        return Response(list(top_products))
+
+        result = list(top_products)
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
     
     @action(detail=False, methods=['get'])
     def by_payment_method(self, request):
         """Get sales breakdown by payment method."""
         days = int(request.query_params.get('days', 30))
+        cache_key = f'by_payment_method_{days}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         start_date = timezone.now().date() - timedelta(days=days)
-        
+
         breakdown = self.queryset.filter(
             invoice_date__gte=start_date,
             payment_status__in=['paid', 'partial']
@@ -205,13 +302,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             total=Sum('paid_amount'),
             count=Count('id')
         )
-        
-        return Response(list(breakdown))
+
+        result = list(breakdown)
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
 
     @action(detail=False, methods=['get'])
     def by_department(self, request):
         """Get invoice value breakdown by department."""
         days = int(request.query_params.get('days', 30))
+        cache_key = f'by_department_{days}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         start_date = timezone.now().date() - timedelta(days=days)
 
         breakdown = self.queryset.filter(
@@ -226,7 +330,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             count=Count('id')
         ).order_by('-total')
 
-        return Response([
+        result = [
             {
                 'department_id': item['department_id'],
                 'department_name': item['department__name'],
@@ -235,7 +339,9 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 'count': item['count'],
             }
             for item in breakdown
-        ])
+        ]
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
 
 
 class PaymentViewSet(viewsets.ModelViewSet):

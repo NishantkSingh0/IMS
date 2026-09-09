@@ -4,20 +4,51 @@ from .models import Category, Supplier, Department, Product, StockTransaction, L
 
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for Category model."""
-    
+
     product_count = serializers.IntegerField(read_only=True)
-    
+
     class Meta:
         model = Category
         fields = ['id', 'name', 'description', 'image', 'is_active', 'product_count', 'created_at', 'updated_at']
 
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Category name is required")
+        if len(value) > 100:
+            raise serializers.ValidationError("Category name cannot exceed 100 characters")
+        return value.strip()
+
 
 class SupplierSerializer(serializers.ModelSerializer):
     """Serializer for Supplier model."""
-    
+
     class Meta:
         model = Supplier
         fields = '__all__'
+
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Supplier name is required")
+        if len(value) > 200:
+            raise serializers.ValidationError("Supplier name cannot exceed 200 characters")
+        return value.strip()
+
+    def validate_phone(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Phone number is required")
+        if len(value) > 15:
+            raise serializers.ValidationError("Phone number cannot exceed 15 characters")
+        return value.strip()
+
+    def validate_email(self, value):
+        if value and '@' not in value:
+            raise serializers.ValidationError("Invalid email format")
+        return value
+
+    def validate_pincode(self, value):
+        if value and (len(value) < 6 or len(value) > 10):
+            raise serializers.ValidationError("Pincode must be between 6 and 10 characters")
+        return value
 
 
 class SupplierListSerializer(serializers.ModelSerializer):
@@ -29,11 +60,46 @@ class SupplierListSerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    """Serializer for factory departments."""
+    """Serializer for factory departments with enhanced security."""
 
     class Meta:
         model = Department
         fields = ['id', 'name', 'code', 'description', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Department name is required")
+        if len(value) > 150:
+            raise serializers.ValidationError("Department name cannot exceed 150 characters")
+        # Check for duplicate names (case-insensitive)
+        from .models import Department
+        if self.instance:
+            # Update case - exclude current instance
+            if Department.objects.filter(name__iexact=value.strip()).exclude(pk=self.instance.pk).exists():
+                raise serializers.ValidationError("Department with this name already exists.")
+        else:
+            # Create case
+            if Department.objects.filter(name__iexact=value.strip()).exists():
+                raise serializers.ValidationError("Department with this name already exists.")
+        return value.strip()
+
+    def validate_code(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Department code is required")
+        if len(value) > 30:
+            raise serializers.ValidationError("Department code cannot exceed 30 characters")
+        # Check for duplicate codes (case-insensitive)
+        from .models import Department
+        if self.instance:
+            # Update case - exclude current instance
+            if Department.objects.filter(code__iexact=value.strip()).exclude(pk=self.instance.pk).exists():
+                raise serializers.ValidationError("Department with this code already exists.")
+        else:
+            # Create case
+            if Department.objects.filter(code__iexact=value.strip()).exists():
+                raise serializers.ValidationError("Department with this code already exists.")
+        return value.strip()
 
 
 class DepartmentListSerializer(serializers.ModelSerializer):
@@ -46,13 +112,13 @@ class DepartmentListSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model."""
-    
+
     category_name = serializers.CharField(source='category.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     profit_margin = serializers.FloatField(read_only=True)
     stock_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
@@ -64,6 +130,62 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_low_stock', 'profit_margin', 'stock_value',
             'created_at', 'updated_at'
         ]
+
+    def validate_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Product name is required")
+        if len(value) > 200:
+            raise serializers.ValidationError("Product name cannot exceed 200 characters")
+        return value.strip()
+
+    def validate_cost_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Cost price must be greater than 0")
+        if value > 1000000:
+            raise serializers.ValidationError("Cost price is too high")
+        return value
+
+    def validate_selling_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Selling price must be greater than 0")
+        if value > 10000000:
+            raise serializers.ValidationError("Selling price is too high")
+        return value
+
+    def validate_mrp(self, value):
+        if value and value < 0:
+            raise serializers.ValidationError("MRP cannot be negative")
+        return value
+
+    def validate_gst_rate(self, value):
+        if value < 0 or value > 100:
+            raise serializers.ValidationError("GST rate must be between 0 and 100")
+        return value
+
+    def validate(self, data):
+        cost_price = data.get('cost_price')
+        selling_price = data.get('selling_price')
+        mrp = data.get('mrp')
+
+        if cost_price and selling_price and selling_price < cost_price:
+            raise serializers.ValidationError("Selling price cannot be less than cost price")
+
+        if mrp and selling_price and mrp < selling_price:
+            raise serializers.ValidationError("MRP cannot be less than selling price")
+
+        min_stock = data.get('min_stock_level')
+        max_stock = data.get('max_stock_level')
+
+        if min_stock is not None and min_stock < 0:
+            raise serializers.ValidationError("Minimum stock level cannot be negative")
+
+        if max_stock is not None and max_stock < 0:
+            raise serializers.ValidationError("Maximum stock level cannot be negative")
+
+        if min_stock is not None and max_stock is not None and max_stock < min_stock:
+            raise serializers.ValidationError("Maximum stock level cannot be less than minimum stock level")
+
+        return data
 
 
 class ProductListSerializer(serializers.ModelSerializer):

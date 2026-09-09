@@ -56,6 +56,11 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
         ordering = ['-date_joined']
     
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+        ordering = ['-date_joined']
+    
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
     
