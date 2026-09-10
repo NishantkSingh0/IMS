@@ -9,6 +9,7 @@ import {
   FiTrash2,
   FiX,
 } from 'react-icons/fi';
+import ConfirmModal from '../components/ConfirmModal';
 
 const emptyForm = {
   name: '',
@@ -23,6 +24,7 @@ const Departments = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, title: '', message: '' });
   const [formData, setFormData] = useState(emptyForm);
 
   useEffect(() => {
@@ -79,15 +81,21 @@ const Departments = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this department?')) return;
-
-    try {
-      await inventoryAPI.deleteDepartment(id);
-      toast.success('Department deleted successfully');
-      fetchDepartments();
-    } catch (error) {
-      toast.error('Department is already used in invoices, so deactivate it instead');
-    }
+    setConfirmModal({
+      isOpen: true,
+      onConfirm: async () => {
+        try {
+          await inventoryAPI.deleteDepartment(id);
+          toast.success('Department deleted successfully');
+          fetchDepartments();
+        } catch (error) {
+          toast.error('Department is already used in invoices, so deactivate it instead');
+        }
+        setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
+      },
+      title: 'Delete Department',
+      message: 'Are you sure you want to delete this department? This action cannot be undone.',
+    });
   };
 
   const toggleActive = async (department) => {
@@ -258,6 +266,15 @@ const Departments = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type="danger"
+      />
     </div>
   );
 };

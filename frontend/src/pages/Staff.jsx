@@ -14,6 +14,7 @@ import {
   FiSearch,
   FiClock,
 } from 'react-icons/fi';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Staff = () => {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ const Staff = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, title: '', message: '' });
   const [formData, setFormData] = useState({
     email: '',
     first_name: '',
@@ -94,15 +96,21 @@ const Staff = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this staff member?')) return;
-
-    try {
-      await staffAPI.deleteUser(id);
-      toast.success('Staff member deleted');
-      fetchStaffData();
-    } catch (error) {
-      toast.error('Failed to delete staff member');
-    }
+    setConfirmModal({
+      isOpen: true,
+      onConfirm: async () => {
+        try {
+          await staffAPI.deleteUser(id);
+          toast.success('Staff member deleted');
+          fetchStaffData();
+        } catch (error) {
+          toast.error('Failed to delete staff member');
+        }
+        setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
+      },
+      title: 'Delete Staff Member',
+      message: 'Are you sure you want to delete this staff member? This action cannot be undone.',
+    });
   };
 
   const resetForm = () => {
@@ -394,6 +402,15 @@ const Staff = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type="danger"
+      />
     </div>
   );
 };

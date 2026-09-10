@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter, FiX, FiPackage } from 'react-icons/fi';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -11,6 +12,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, title: '', message: '' });
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -91,15 +93,21 @@ const Products = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    
-    try {
-      await inventoryAPI.deleteProduct(id);
-      toast.success('Product deleted successfully');
-      fetchProducts();
-    } catch (error) {
-      toast.error('Failed to delete product');
-    }
+    setConfirmModal({
+      isOpen: true,
+      onConfirm: async () => {
+        try {
+          await inventoryAPI.deleteProduct(id);
+          toast.success('Product deleted successfully');
+          fetchProducts();
+        } catch (error) {
+          toast.error('Failed to delete product');
+        }
+        setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
+      },
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+    });
   };
 
   const resetForm = () => {
@@ -461,6 +469,15 @@ const Products = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type="danger"
+      />
     </div>
   );
 };
