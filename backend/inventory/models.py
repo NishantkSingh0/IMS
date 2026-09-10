@@ -87,7 +87,7 @@ class Product(models.Model):
         ('dozen', 'Dozen'),
     ]
     
-    sku = models.CharField(max_length=50, unique=True)
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
     barcode = models.CharField(max_length=100, blank=True, db_index=True)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)

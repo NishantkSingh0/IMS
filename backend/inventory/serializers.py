@@ -130,6 +130,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_low_stock', 'profit_margin', 'stock_value',
             'created_at', 'updated_at'
         ]
+        extra_kwargs = {
+            'sku': {'required': False, 'allow_blank': True}
+        }
 
     def validate_name(self, value):
         if not value or not value.strip():
@@ -198,7 +201,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'barcode', 'name', 'category', 'category_name',
-            'selling_price', 'current_stock', 'unit', 'is_low_stock', 'is_active', 'image'
+            'selling_price', 'current_stock', 'min_stock_level', 'unit', 'is_low_stock', 'is_active', 'image'
         ]
 
 

@@ -1,24 +1,8 @@
 import { useState, useEffect } from 'react';
 import { salesAPI } from '../services/api';
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import {
-  FiCalendar,
-  FiDollarSign,
-  FiShoppingCart,
-  FiBriefcase,
-} from 'react-icons/fi';
+import { FiCalendar, FiDollarSign, FiShoppingCart, FiBriefcase } from 'react-icons/fi';
 
 const Sales = () => {
   const [loading, setLoading] = useState(true);

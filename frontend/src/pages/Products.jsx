@@ -1,15 +1,7 @@
 import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import {
-  FiSearch,
-  FiPlus,
-  FiEdit2,
-  FiTrash2,
-  FiFilter,
-  FiX,
-  FiPackage,
-} from 'react-icons/fi';
+import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter, FiX, FiPackage } from 'react-icons/fi';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -36,6 +28,7 @@ const Products = () => {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    console.log('First 2 Products:', products.slice(0, 2));
   }, [searchQuery, selectedCategory]);
 
   const fetchProducts = async () => {
@@ -141,6 +134,20 @@ const Products = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-500">Manage your product catalog</p>
+          <div className="flex items-center gap-4 mt-2 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-red-300 border border-red-500"></span>
+              <span className="text-gray-600">Restock Required</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-yellow-300 border border-yellow-500"></span>
+              <span className="text-gray-600">Restock Soon</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-green-300 border border-green-500"></span>
+              <span className="text-gray-600">Stock Healthy</span>
+            </span>
+          </div>
         </div>
         <button
           onClick={() => {
@@ -244,9 +251,9 @@ const Products = () => {
                     <td className="px-6 py-4 text-center">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.current_stock <= product.min_stock_level
+                          product.current_stock < product.min_stock_level
                             ? 'bg-red-100 text-red-700'
-                            : product.current_stock <= product.min_stock_level * 2
+                            : product.current_stock < product.min_stock_level * 1.5
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-green-100 text-green-700'
                         }`}

@@ -69,7 +69,7 @@ class Invoice(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            self.invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
+            self.invoice_number = f"SLIP-{uuid.uuid4().hex[:8].upper()}"
         
         # Calculate due amount
         self.due_amount = self.total_amount - self.paid_amount

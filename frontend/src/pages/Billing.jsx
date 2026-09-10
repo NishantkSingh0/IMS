@@ -263,7 +263,7 @@ const Billing = () => {
                       <p className="font-semibold text-gray-900">
                         {formatCurrency(product.selling_price)}
                       </p>
-                      <p className={`text-sm ${product.current_stock > 10 ? 'text-green-600' : 'text-orange-600'}`}>
+                      <p className={`text-sm ${product.current_stock > (product.min_stock_level || 10) ? 'text-green-600' : 'text-orange-600'}`}>
                         Stock: {product.current_stock}
                       </p>
                     </div>
