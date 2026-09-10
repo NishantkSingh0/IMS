@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers } from 'react-icons/fi';
+import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers, FiMaximize, FiMinimize } from 'react-icons/fi';
 
 const ownerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
@@ -15,15 +15,17 @@ const ownerNavigation = [
 
 const managerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
-  { name: 'Billing (POS)', href: '/billing', icon: FiShoppingCart },
+  { name: 'Issue', href: '/billing', icon: FiShoppingCart },
   { name: 'Products', href: '/products', icon: FiPackage },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
+  { name: 'Staff', href: '/staff', icon: FiUsers },
 ];
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
@@ -34,6 +36,27 @@ const MainLayout = () => {
     logout();
     navigate('/login');
   };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleFullscreenChange = () => {
+    setIsFullscreen(!!document.fullscreenElement);
+  };
+
+  useEffect(() => {
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -86,7 +109,7 @@ const MainLayout = () => {
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-black-50 text-black'
+                      ? 'bg-gray-200 text-black'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`
                 }
@@ -134,16 +157,24 @@ const MainLayout = () => {
         {/* Top navbar */}
         <header className="sticky top-0 z-30 bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4">
-            <button
-              className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <FiMenu className="w-6 h-6" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <FiMenu className="w-6 h-6" />
+              </button>
 
-            <div className="flex-1 lg:flex-none">
               <h1 className="text-lg font-semibold text-gray-800 lg:hidden">{isOwner ? 'Owner Dashboard' : 'Manager Dashboard'}</h1>
             </div>
+
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            >
+              {isFullscreen ? <FiMinimize className="w-5 h-5" /> : <FiMaximize className="w-5 h-5" />}
+            </button>
           </div>
         </header>
 

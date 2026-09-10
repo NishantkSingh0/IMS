@@ -1,3 +1,5 @@
 SKU's are not being auto generate
-COst Price is the Selling Price
-Remove Barcode System and logics
+COst Price is the Selling Price and include Product Name As per Tally in product section as an Optional Field
+Remove Barcode System and their logics 
+Add pagenation slider over Invoices and Products
+Outward Slip Batch Printer

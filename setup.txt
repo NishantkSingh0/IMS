@@ -14,3 +14,10 @@ npm run dev
 cd manager_dashboard
 npm install
 npm run dev
+
+
+brew services start redis
+
+
+npm run dev -- --host 0.0.0.0
+python manage.py runserver 0.0.0.0:8000

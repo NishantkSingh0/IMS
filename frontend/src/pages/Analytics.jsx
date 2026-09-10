@@ -1,25 +1,12 @@
 import { useState, useEffect } from 'react';
 import { salesAPI } from '../services/api';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FiDollarSign, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
 import { format } from 'date-fns';
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('30');
+  const [dateRange, setDateRange] = useState('7');
   const [dailySales, setDailySales] = useState([]);
   const [monthlySales, setMonthlySales] = useState([]);
   const [stats, setStats] = useState(null);
@@ -36,7 +23,6 @@ const Analytics = () => {
         salesAPI.getMonthlySummary({ months: 12 }),
         salesAPI.getStats(),
       ]);
-
       setDailySales(dailyRes.data || []);
       setMonthlySales(monthlyRes.data || []);
       setStats(statsRes.data);

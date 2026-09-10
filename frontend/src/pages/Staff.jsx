@@ -53,6 +53,7 @@ const Staff = () => {
       setActivityLog(activityRes.data?.results || activityRes.data || []);
     } catch (error) {
       console.error('Error fetching staff data:', error);
+      toast.error(error.response?.data?.error || 'Failed to load staff data');
     } finally {
       setLoading(false);
     }
@@ -159,23 +160,23 @@ const Staff = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           title="Total Staff"
-          value={stats?.total_users || 0}
+          value={users.length || 0}
           icon={FiUsers}
           color="indigo"
         />
         <StatCard
           title="Active Staff"
-          value={stats?.active_users || 0}
+          value={users.filter((user) => user.is_active).length || 0}
           icon={FiUserCheck}
           color="green"
         />
         <StatCard
           title="Inactive Staff"
-          value={(stats?.total_users || 0) - (stats?.active_users || 0)}
+          value={(users.length || 0) - (users.filter((user) => user.is_active).length || 0)}
           icon={FiUserX}
           color="red"
         />
-        <StatCard title="Roles" value={4} icon={FiShield} color="purple" />
+        <StatCard title="Roles" value={2} icon={FiShield} color="purple" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

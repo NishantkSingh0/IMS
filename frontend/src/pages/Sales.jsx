@@ -22,7 +22,7 @@ import {
 
 const Sales = () => {
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('30');
+  const [dateRange, setDateRange] = useState('7');
   const [dailySales, setDailySales] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [departmentUsage, setDepartmentUsage] = useState([]);
