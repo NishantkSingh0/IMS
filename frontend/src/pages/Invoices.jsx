@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
 import {
@@ -28,6 +28,7 @@ const Invoices = () => {
     currentPage: 1,
     totalPages: 1,
   });
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
@@ -35,9 +36,11 @@ const Invoices = () => {
   }, [searchQuery, projectFilter, fromDate, toDate]);
 
   useEffect(() => {
-    if (pagination.currentPage > 1) {
-      fetchInvoices();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
+    fetchInvoices();
   }, [pagination.currentPage]);
 
   const fetchInvoices = async () => {
@@ -56,22 +59,22 @@ const Invoices = () => {
       
       if (data.results) {
         setInvoices(data.results);
-        setPagination({
+        setPagination(prev => ({
+          ...prev,
           count: data.count,
           next: data.next,
           previous: data.previous,
-          currentPage: pagination.currentPage,
           totalPages: Math.ceil(data.count / 20),
-        });
+        }));
       } else {
         setInvoices(data);
-        setPagination({
+        setPagination(prev => ({
+          ...prev,
           count: data.length,
           next: null,
           previous: null,
-          currentPage: 1,
           totalPages: 1,
-        });
+        }));
       }
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -300,12 +303,12 @@ const Invoices = () => {
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {((pagination.currentPage - 1) * 20) + 1} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} invoices
+              Showing {Math.max(0, ((pagination.currentPage - 1) * 20) + 1)} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} invoices
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                disabled={!pagination.previous}
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
+                disabled={!pagination.previous || pagination.currentPage <= 1}
                 className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
@@ -314,8 +317,8 @@ const Invoices = () => {
                 Page {pagination.currentPage} of {pagination.totalPages}
               </span>
               <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                disabled={!pagination.next}
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.min(prev.totalPages, prev.currentPage + 1) }))}
+                disabled={!pagination.next || pagination.currentPage >= pagination.totalPages}
                 className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

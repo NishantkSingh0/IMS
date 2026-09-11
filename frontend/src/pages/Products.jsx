@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiFilter, FiX, FiPackage } from 'react-icons/fi';
@@ -32,6 +32,7 @@ const Products = () => {
     currentPage: 1,
     totalPages: 1,
   });
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
@@ -40,9 +41,11 @@ const Products = () => {
   }, [searchQuery, selectedCategory]);
 
   useEffect(() => {
-    if (pagination.currentPage > 1) {
-      fetchProducts();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
+    fetchProducts();
   }, [pagination.currentPage]);
 
   const fetchProducts = async () => {
@@ -59,22 +62,22 @@ const Products = () => {
       
       if (data.results) {
         setProducts(data.results);
-        setPagination({
+        setPagination(prev => ({
+          ...prev,
           count: data.count,
           next: data.next,
           previous: data.previous,
-          currentPage: pagination.currentPage,
           totalPages: Math.ceil(data.count / 20),
-        });
+        }));
       } else {
         setProducts(data);
-        setPagination({
+        setPagination(prev => ({
+          ...prev,
           count: data.length,
           next: null,
           previous: null,
-          currentPage: 1,
           totalPages: 1,
-        });
+        }));
       }
     } catch (error) {
       toast.error('Failed to fetch products');
@@ -338,12 +341,12 @@ const Products = () => {
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {((pagination.currentPage - 1) * 20) + 1} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} products
+              Showing {Math.max(0, ((pagination.currentPage - 1) * 20) + 1)} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} products
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                disabled={!pagination.previous}
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) }))}
+                disabled={!pagination.previous || pagination.currentPage <= 1}
                 className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
@@ -352,8 +355,8 @@ const Products = () => {
                 Page {pagination.currentPage} of {pagination.totalPages}
               </span>
               <button
-                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                disabled={!pagination.next}
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: Math.min(prev.totalPages, prev.currentPage + 1) }))}
+                disabled={!pagination.next || pagination.currentPage >= pagination.totalPages}
                 className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
