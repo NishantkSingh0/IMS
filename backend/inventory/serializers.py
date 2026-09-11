@@ -116,18 +116,17 @@ class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
-    profit_margin = serializers.FloatField(read_only=True)
     stock_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = Product
         fields = [
-            'id', 'sku', 'barcode', 'name', 'description',
+            'id', 'sku', 'name', 'tally_name', 'description',
             'category', 'category_name', 'supplier', 'supplier_name',
-            'cost_price', 'selling_price', 'mrp',
+            'cost_price', 'mrp',
             'current_stock', 'min_stock_level', 'max_stock_level', 'unit',
             'gst_rate', 'hsn_code', 'image', 'is_active',
-            'is_low_stock', 'profit_margin', 'stock_value',
+            'is_low_stock', 'stock_value',
             'created_at', 'updated_at'
         ]
         extra_kwargs = {
@@ -148,13 +147,6 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cost price is too high")
         return value
 
-    def validate_selling_price(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Selling price must be greater than 0")
-        if value > 10000000:
-            raise serializers.ValidationError("Selling price is too high")
-        return value
-
     def validate_mrp(self, value):
         if value and value < 0:
             raise serializers.ValidationError("MRP cannot be negative")
@@ -166,16 +158,6 @@ class ProductSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        cost_price = data.get('cost_price')
-        selling_price = data.get('selling_price')
-        mrp = data.get('mrp')
-
-        if cost_price and selling_price and selling_price < cost_price:
-            raise serializers.ValidationError("Selling price cannot be less than cost price")
-
-        if mrp and selling_price and mrp < selling_price:
-            raise serializers.ValidationError("MRP cannot be less than selling price")
-
         min_stock = data.get('min_stock_level')
         max_stock = data.get('max_stock_level')
 
@@ -193,15 +175,15 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for product lists."""
-    
+
     category_name = serializers.CharField(source='category.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
-    
+
     class Meta:
         model = Product
         fields = [
-            'id', 'sku', 'barcode', 'name', 'category', 'category_name',
-            'selling_price', 'current_stock', 'min_stock_level', 'unit', 'is_low_stock', 'is_active', 'image'
+            'id', 'sku', 'name', 'tally_name', 'category', 'category_name',
+            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'is_low_stock', 'is_active', 'image'
         ]
 
 

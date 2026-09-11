@@ -88,15 +88,14 @@ class Product(models.Model):
     ]
     
     sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    barcode = models.CharField(max_length=100, blank=True, db_index=True)
     name = models.CharField(max_length=200)
+    tally_name = models.CharField(max_length=150, blank=True, help_text='Tally product name for integration')
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
-    
+
     # Pricing
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     mrp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     
     # Stock
@@ -133,13 +132,7 @@ class Product(models.Model):
     @property
     def is_low_stock(self):
         return self.current_stock <= self.min_stock_level
-    
-    @property
-    def profit_margin(self):
-        if self.cost_price > 0:
-            return ((self.selling_price - self.cost_price) / self.cost_price) * 100
-        return 0
-    
+
     @property
     def stock_value(self):
         return self.current_stock * self.cost_price

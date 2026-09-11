@@ -26,9 +26,9 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'selling_price', 'current_stock', 'is_low_stock', 'is_active')
+    list_display = ('name', 'sku', 'tally_name', 'category', 'cost_price', 'current_stock', 'is_low_stock', 'is_active')
     list_filter = ('category', 'supplier', 'is_active', 'unit')
-    search_fields = ('name', 'sku', 'barcode', 'description')
+    search_fields = ('name', 'tally_name', 'sku', 'description')
     readonly_fields = ('sku', 'created_at', 'updated_at')
 
 

@@ -169,7 +169,7 @@ class InvoiceCreateSerializer(serializers.Serializer):
                 )
             
             # Create invoice item
-            unit_price = item_data.get('unit_price', product.selling_price)
+            unit_price = item_data.get('unit_price', product.cost_price)
             InvoiceItem.objects.create(
                 invoice=invoice,
                 product=product,

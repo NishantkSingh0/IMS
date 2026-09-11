@@ -272,7 +272,7 @@ const Staff = () => {
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-xs text-gray-500">{log.user_name}</p>
                     <p className="text-xs text-gray-400">
-                      {format(new Date(log.created_at), 'MMM d, h:mm a')}
+                      {log.created_at ? format(new Date(log.created_at), 'MMM d, h:mm a') : 'N/A'}
                     </p>
                   </div>
                 </div>

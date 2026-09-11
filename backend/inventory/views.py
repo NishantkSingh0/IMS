@@ -210,8 +210,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'supplier', 'is_active', 'unit']
-    search_fields = ['name', 'sku', 'barcode', 'description']
-    ordering_fields = ['name', 'selling_price', 'current_stock', 'created_at']
+    search_fields = ['name', 'tally_name', 'sku', 'description']
+    ordering_fields = ['name', 'current_stock', 'created_at']
     ordering = ['name']
 
     def get_serializer_class(self):
@@ -267,21 +267,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         products = self.queryset.filter(is_active=True, current_stock=0)
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'])
-    def search_barcode(self, request):
-        """Search product by barcode."""
-        barcode = request.query_params.get('barcode', '')
-        if not barcode:
-            return Response({'error': 'Barcode is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            product = self.queryset.get(barcode=barcode, is_active=True)
-            serializer = ProductSerializer(product)
-            return Response(serializer.data)
-        except Product.DoesNotExist:
-            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Get inventory statistics."""

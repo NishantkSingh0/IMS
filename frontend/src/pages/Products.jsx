@@ -16,10 +16,9 @@ const Products = () => {
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
-    barcode: '',
+    tally_name: '',
     category: '',
     cost_price: '',
-    selling_price: '',
     current_stock: '',
     min_stock_level: '10',
     gst_rate: '18',
@@ -59,11 +58,17 @@ const Products = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Convert gst_rate to number before sending to backend
+      const submissionData = {
+        ...formData,
+        gst_rate: parseFloat(formData.gst_rate) || 18
+      };
+
       if (editingProduct) {
-        await inventoryAPI.updateProduct(editingProduct.id, formData);
+        await inventoryAPI.updateProduct(editingProduct.id, submissionData);
         toast.success('Product updated successfully');
       } else {
-        await inventoryAPI.createProduct(formData);
+        await inventoryAPI.createProduct(submissionData);
         toast.success('Product created successfully');
       }
       setShowModal(false);
@@ -79,13 +84,12 @@ const Products = () => {
     setFormData({
       name: product.name,
       sku: product.sku,
-      barcode: product.barcode || '',
+      tally_name: product.tally_name || '',
       category: product.category || '',
       cost_price: product.cost_price,
-      selling_price: product.selling_price,
       current_stock: product.current_stock,
       min_stock_level: product.min_stock_level,
-      gst_rate: product.gst_rate,
+      gst_rate: String(product.gst_rate || 18),
       unit: product.unit,
       description: product.description || '',
     });
@@ -115,10 +119,9 @@ const Products = () => {
     setFormData({
       name: '',
       sku: '',
-      barcode: '',
+      tally_name: '',
       category: '',
       cost_price: '',
-      selling_price: '',
       current_stock: '',
       min_stock_level: '10',
       gst_rate: '18',
@@ -178,7 +181,7 @@ const Products = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products..."
+              placeholder="Search by name, SKU, or Tally name..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
@@ -223,7 +226,7 @@ const Products = () => {
                     Category
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
+                    Cost Price
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Stock
@@ -243,8 +246,8 @@ const Products = () => {
                         </div>
                         <div className="ml-3">
                           <p className="font-medium text-gray-900">{product.name}</p>
-                          {product.barcode && (
-                            <p className="text-sm text-gray-500">{product.barcode}</p>
+                          {product.tally_name && (
+                            <p className="text-sm text-gray-500">Tally: {product.tally_name}</p>
                           )}
                         </div>
                       </div>
@@ -254,7 +257,7 @@ const Products = () => {
                       {product.category_name || '-'}
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium text-gray-900">
-                      {formatCurrency(product.selling_price)}
+                      {formatCurrency(product.cost_price)}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span
@@ -298,9 +301,18 @@ const Products = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {editingProduct ? 'Edit Product' : 'Add Product'}
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {editingProduct ? 'Edit Product' : 'Add Product'}
+                </h3>
+
+                {editingProduct && (
+                  <span className="text-sm text-gray-500">
+                    Some fields are disabled to ensure integrity over past transactions
+                  </span>
+                )}
+              </div>
+
               <button
                 onClick={() => setShowModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg"
@@ -316,6 +328,7 @@ const Products = () => {
                   </label>
                   <input
                     type="text"
+                    disabled={editingProduct !== null}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -326,6 +339,7 @@ const Products = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">ProductID</label>
                   <input
                     type="text"
+                    disabled={editingProduct !== null}
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -333,17 +347,19 @@ const Products = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tally Product Name</label>
                   <input
                     type="text"
-                    value={formData.barcode}
-                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                    value={formData.tally_name}
+                    onChange={(e) => setFormData({ ...formData, tally_name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Optional"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select
+                    disabled={editingProduct !== null}
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -359,6 +375,7 @@ const Products = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                   <select
+                    disabled={editingProduct !== null}
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -377,23 +394,10 @@ const Products = () => {
                     Cost Price *
                   </label>
                   <input
+                    disabled={editingProduct !== null}
                     type="number"
                     value={formData.cost_price}
                     onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    required
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Selling Price *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.selling_price}
-                    onChange={(e) => setFormData({ ...formData, selling_price: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     required
                     min="0"
@@ -431,6 +435,7 @@ const Products = () => {
                   </label>
                   <input
                     type="number"
+                    disabled={editingProduct !== null}
                     value={formData.gst_rate}
                     onChange={(e) => setFormData({ ...formData, gst_rate: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -444,6 +449,7 @@ const Products = () => {
                   </label>
                   <textarea
                     value={formData.description}
+                    placeholder="Optional"
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     rows={3}

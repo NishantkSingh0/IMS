@@ -153,14 +153,14 @@ const Billing = () => {
 
   const calculateSubtotal = () => {
     return cart.reduce(
-      (sum, item) => sum + item.product.selling_price * item.quantity - item.discount,
+      (sum, item) => sum + item.product.cost_price * item.quantity - item.discount,
       0
     );
   };
 
   const calculateTax = () => {
     return cart.reduce((sum, item) => {
-      const itemTotal = item.product.selling_price * item.quantity - item.discount;
+      const itemTotal = item.product.cost_price * item.quantity - item.discount;
       return sum + itemTotal * (item.product.gst_rate || 18) / 100;
     }, 0);
   };
@@ -200,7 +200,7 @@ const Billing = () => {
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          unit_price: item.product.selling_price,
+          unit_price: item.product.cost_price,
           discount: item.discount,
         })),
         discount_percentage: discount,
@@ -243,7 +243,7 @@ const Billing = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, SKU"
+              placeholder="Search by name, SKU, or Tally name"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               autoFocus
             />
@@ -261,7 +261,7 @@ const Billing = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
-                        {formatCurrency(product.selling_price)}
+                        {formatCurrency(product.cost_price)}
                       </p>
                       <p className={`text-sm ${product.current_stock > (product.min_stock_level || 10) ? 'text-green-600' : 'text-orange-600'}`}>
                         Stock: {product.current_stock}
@@ -325,10 +325,10 @@ const Billing = () => {
                       </div>
                     </td>
                     <td className="py-3 text-right text-gray-900">
-                      {formatCurrency(item.product.selling_price)}
+                      {formatCurrency(item.product.cost_price)}
                     </td>
                     <td className="py-3 text-right font-medium text-gray-900">
-                      {formatCurrency(item.product.selling_price * item.quantity - item.discount)}
+                      {formatCurrency(item.product.cost_price * item.quantity - item.discount)}
                     </td>
                     <td className="py-3 text-right">
                       <button
