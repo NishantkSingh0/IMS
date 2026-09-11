@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 import {
   FiSearch,
   FiEye,
@@ -10,6 +11,7 @@ import {
   FiFilter,
   FiCalendar,
   FiRefreshCw,
+  FiDownload,
 } from 'react-icons/fi';
 
 const Invoices = () => {
@@ -108,6 +110,33 @@ const Invoices = () => {
     setToDate('');
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const params = {};
+      if (searchQuery) params.search = searchQuery;
+      if (projectFilter) params.project_name = projectFilter;
+      if (fromDate) params.created_at_gte = fromDate;
+      if (toDate) params.created_at_lte = toDate;
+
+      const blob = await salesAPI.exportInvoicesExcel(params);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `outward_slips_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Excel file downloaded successfully');
+    } catch (error) {
+      console.error('Error exporting invoices:', error);
+      toast.error('Failed to export invoices');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -129,6 +158,18 @@ const Invoices = () => {
             >
               <FiRefreshCw className="w-3.5 h-3.5" />
               Reset
+            </button>
+          )}
+
+          {/* Download Button - Only visible when filters are applied */}
+          {(searchQuery || projectFilter || fromDate || toDate) && (
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition"
+              title="Export to Excel"
+            >
+              <FiDownload className="w-4 h-4" />
+              <span>Export Excel</span>
             </button>
           )}
         </div>

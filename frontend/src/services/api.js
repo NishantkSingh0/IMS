@@ -192,6 +192,21 @@ export const salesAPI = {
   getTopProducts: (params) => api.get('/sales/invoices/top_products/', { params }),
   getByDepartment: (params) => api.get('/sales/invoices/by_department/', { params }),
   getDailySales: (params) => api.get('/sales/daily-sales/', { params }),
+  exportInvoicesExcel: (params) => {
+    const token = localStorage.getItem('access_token');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    const queryString = new URLSearchParams(params).toString();
+    return fetch(`${API_URL}/sales/invoices/export_excel/?${queryString}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to export invoices');
+      }
+      return response.blob();
+    });
+  },
 };
 
 // External Projects API

@@ -9,7 +9,9 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
 from django.conf import settings
 from django.core.cache import cache
+from django.http import HttpResponse
 from datetime import timedelta
+import pandas as pd
 from .models import Invoice, InvoiceItem, Payment, DailySales, Return
 from .serializers import (
     InvoiceSerializer, InvoiceListSerializer, InvoiceCreateSerializer,
@@ -145,6 +147,65 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             serializer.save(received_by=request.user)
             return Response(InvoiceSerializer(invoice).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def export_excel(self, request):
+        """Export filtered invoices to Excel with product-wise data."""
+        # Apply the same filters as the list view
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Get all matching invoices (no pagination)
+        invoices = queryset.select_related('customer', 'department', 'created_by').prefetch_related('items').all()
+        
+        # Prepare data for Excel export
+        data = []
+        for invoice in invoices:
+            for item in invoice.items.all():
+                data.append({
+                    'Invoice Number': invoice.invoice_number,
+                    'Invoice Date': invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '',
+                    'Created At': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S') if invoice.created_at else '',
+                    'Department': invoice.department.name if invoice.department else '',
+                    'Department Code': invoice.department.code if invoice.department else '',
+                    'Customer': invoice.customer.name if invoice.customer else '',
+                    'Project Name': invoice.project_name or '',
+                    'Project Created By': invoice.project_created_by or '',
+                    'Product SKU': item.product_sku or '',
+                    'Product Name': item.product_name or '',
+                    'Quantity': item.quantity,
+                    'Unit Price': float(item.unit_price) if item.unit_price else 0,
+                    'Discount': float(item.discount) if item.discount else 0,
+                    'Tax Rate (%)': float(item.tax_rate) if item.tax_rate else 0,
+                    'Tax Amount': float(item.tax_amount) if item.tax_amount else 0,
+                    'Total': float(item.total) if item.total else 0,
+                    'Payment Status': invoice.payment_status,
+                    'Payment Method': invoice.payment_method or '',
+                    'Payment Reference': invoice.payment_reference or '',
+                    'Created By': invoice.created_by.get_full_name() if invoice.created_by else '',
+                    'Notes': invoice.notes or '',
+                })
+        
+        # Create DataFrame
+        df = pd.DataFrame(data)
+        
+        # Create Excel response
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="outward_slips_export.xlsx"'
+        
+        # Write to Excel
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Outward Slips', index=False)
+            
+            # Auto-adjust column widths
+            worksheet = writer.sheets['Outward Slips']
+            for idx, col in enumerate(df.columns, 1):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
+        
+        return response
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
