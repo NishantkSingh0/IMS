@@ -220,36 +220,51 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
 
     def list(self, request, *args, **kwargs):
-        # Only cache unfiltered list (no search or filters applied)
+        # Only cache unfiltered first page (no search or filters applied)
         has_filters = any(request.query_params.get(key) for key in ['search', 'category', 'supplier', 'is_active', 'unit'])
+        page = request.query_params.get('page')
 
-        if not has_filters:
-            cache_key = 'products_list'
+        if not has_filters and (not page or page == '1'):
+            cache_key = 'products_list_page1'
             cached_data = cache.get(cache_key)
             if cached_data is not None:
                 return Response(cached_data)
 
             queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                response_data = self.get_paginated_response(serializer.data).data
+                cache.set(cache_key, response_data, settings.CACHE_TIMEOUTS.get('products', 600))
+                return Response(response_data)
+
             serializer = self.get_serializer(queryset, many=True)
-            cache.set(cache_key, serializer.data, settings.CACHE_TIMEOUTS.get('products', 600))
             return Response(serializer.data)
 
-        # For filtered/searched results, don't cache
+        # For filtered/searched/paginated results, don't cache
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save()
-        cache.delete('products_list')
+        cache.delete('products_list_page1')
+        cache.delete('inventory_stats')
 
     def perform_update(self, serializer):
         serializer.save()
-        cache.delete('products_list')
+        cache.delete('products_list_page1')
+        cache.delete('inventory_stats')
 
     def perform_destroy(self, instance):
         instance.delete()
-        cache.delete('products_list')
+        cache.delete('products_list_page1')
+        cache.delete('inventory_stats')
     
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
@@ -324,7 +339,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             product.save()
 
             # Invalidate product and inventory stats caches
-            cache.delete('products_list')
+            cache.delete('products_list_page1')
+            cache.delete('inventory_stats')
             cache.delete('inventory_stats')
 
             # Create stock transaction record

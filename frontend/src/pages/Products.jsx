@@ -25,20 +25,57 @@ const Products = () => {
     unit: 'pcs',
     description: '',
   });
+  const [pagination, setPagination] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+    currentPage: 1,
+    totalPages: 1,
+  });
 
   useEffect(() => {
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
     fetchProducts();
     fetchCategories();
-    console.log('First 2 Products:', products.slice(0, 2));
   }, [searchQuery, selectedCategory]);
+
+  useEffect(() => {
+    if (pagination.currentPage > 1) {
+      fetchProducts();
+    }
+  }, [pagination.currentPage]);
 
   const fetchProducts = async () => {
     try {
-      const params = { search: searchQuery };
+      const params = { 
+        search: searchQuery,
+        page: pagination.currentPage,
+        page_size: 20
+      };
       if (selectedCategory) params.category = selectedCategory;
       
       const response = await inventoryAPI.getProducts(params);
-      setProducts(response.data.results || response.data);
+      const data = response.data;
+      
+      if (data.results) {
+        setProducts(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous,
+          currentPage: pagination.currentPage,
+          totalPages: Math.ceil(data.count / 20),
+        });
+      } else {
+        setProducts(data);
+        setPagination({
+          count: data.length,
+          next: null,
+          previous: null,
+          currentPage: 1,
+          totalPages: 1,
+        });
+      }
     } catch (error) {
       toast.error('Failed to fetch products');
     } finally {
@@ -295,6 +332,36 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {((pagination.currentPage - 1) * 20) + 1} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} products
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                disabled={!pagination.previous}
+                className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 bg-gray-100 rounded-lg">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                disabled={!pagination.next}
+                className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Product Modal */}
       {showModal && (

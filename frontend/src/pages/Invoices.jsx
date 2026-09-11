@@ -21,21 +21,58 @@ const Invoices = () => {
   const [toDate, setToDate] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [pagination, setPagination] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+    currentPage: 1,
+    totalPages: 1,
+  });
 
   useEffect(() => {
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
     fetchInvoices();
   }, [searchQuery, projectFilter, fromDate, toDate]);
 
+  useEffect(() => {
+    if (pagination.currentPage > 1) {
+      fetchInvoices();
+    }
+  }, [pagination.currentPage]);
+
   const fetchInvoices = async () => {
     try {
-      const params = {};
+      const params = {
+        page: pagination.currentPage,
+        page_size: 20
+      };
       if (searchQuery) params.search = searchQuery;
       if (projectFilter) params.project_name = projectFilter;
       if (fromDate) params.created_at_gte = fromDate;
       if (toDate) params.created_at_lte = toDate;
       
       const response = await salesAPI.getInvoices(params);
-      setInvoices(response.data.results || response.data);
+      const data = response.data;
+      
+      if (data.results) {
+        setInvoices(data.results);
+        setPagination({
+          count: data.count,
+          next: data.next,
+          previous: data.previous,
+          currentPage: pagination.currentPage,
+          totalPages: Math.ceil(data.count / 20),
+        });
+      } else {
+        setInvoices(data);
+        setPagination({
+          count: data.length,
+          next: null,
+          previous: null,
+          currentPage: 1,
+          totalPages: 1,
+        });
+      }
     } catch (error) {
       console.error('Error fetching invoices:', error);
     } finally {
@@ -236,7 +273,7 @@ const Invoices = () => {
                       {invoice.project_name || '-'}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
-                      {format(new Date(invoice.created_at), 'dd MMM yyyy, hh:mm a')}
+                      {invoice.created_at ? format(new Date(invoice.created_at), 'dd MMM yyyy, hh:mm a') : 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-gray-900">
                       {formatCurrency(invoice.total_amount)}
@@ -257,6 +294,36 @@ const Invoices = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {((pagination.currentPage - 1) * 20) + 1} to {Math.min(pagination.currentPage * 20, pagination.count)} of {pagination.count} invoices
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                disabled={!pagination.previous}
+                className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1 bg-gray-100 rounded-lg">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                disabled={!pagination.next}
+                className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invoice Detail Modal */}
       {showDetailModal && selectedInvoice && (
