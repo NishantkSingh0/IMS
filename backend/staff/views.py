@@ -63,9 +63,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'destroy']:
             return [IsOwner()]
-        if self.action in ['list', 'retrieve', 'update', 'partial_update', 'stats', 'me']:
+        if self.action in ['list', 'retrieve', 'update', 'partial_update']:
             return [IsOwnerOrManager()]
-        if self.action in ['change_password']:
+        # stats endpoint is available to all authenticated users for dashboard
+        if self.action in ['stats', 'me', 'change_password']:
             return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated()]
     
@@ -134,9 +135,17 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Password changed successfully'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=False, methods=['get'], permission_classes=[IsOwnerOrManager])
+    @action(detail=False, methods=['get'])
     def stats(self, request):
         """Get staff statistics."""
+        # Check permissions - only owners and managers can see detailed staff stats
+        if request.user.role not in ['owner', 'manager']:
+            # Return limited stats for other roles
+            return Response({
+                'total_staff': User.objects.count(),
+                'active_staff': User.objects.filter(is_active=True).count(),
+            })
+        
         # Cache stats response
         cache_key = 'staff_stats'
         cached_data = cache.get(cache_key)

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -18,6 +18,18 @@ from .serializers import (
     InvoiceItemSerializer, PaymentSerializer, DailySalesSerializer,
     ReturnSerializer
 )
+
+
+class IsOwner(permissions.BasePermission):
+    """Permission class for owner-only access."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'owner'
+
+
+class IsOwnerOrManager(permissions.BasePermission):
+    """Permission class for owner/manager access."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in ['owner', 'manager']
 
 
 class InvoiceFilter(FilterSet):
@@ -40,6 +52,18 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     search_fields = ['invoice_number', 'department__name', 'department__code', 'project_name', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'invoice_date']
     ordering = ['-created_at']
+
+    def get_permissions(self):
+        # Statistics endpoints are available to all authenticated users for dashboard
+        if self.action in ['stats', 'daily_summary', 'monthly_summary', 'top_products', 'by_department', 'by_project']:
+            return [IsAuthenticated()]
+        # Analytics endpoint is restricted to owners only
+        if self.action in ['export_excel']:
+            return [IsOwner()]
+        # CRUD operations are restricted to owners and managers
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsOwnerOrManager()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -157,9 +181,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         # Prepare data for Excel export
         data = []
         for invoice in invoices:
-            for i, item in enumerate(invoice.items.all()):
+            for item in invoice.items.all():
                 data.append({
-                    'Slip': i,
                     'Slip ID': invoice.invoice_number,
                     'Outward At': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S') if invoice.created_at else '',
                     'Department': invoice.department.name if invoice.department else '',
@@ -354,6 +377,40 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 'department_id': item['department_id'],
                 'department_name': item['department__name'],
                 'department_code': item['department__code'],
+                'total': item['total'],
+                'count': item['count'],
+            }
+            for item in breakdown
+        ]
+        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
+        return Response(result)
+    
+    @action(detail=False, methods=['get'])
+    def by_project(self, request):
+        """Get invoice value breakdown by project."""
+        days = int(request.query_params.get('days', 30))
+        cache_key = f'by_project_{days}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        start_date = timezone.now().date() - timedelta(days=days)
+
+        breakdown = self.queryset.filter(
+            invoice_date__gte=start_date,
+            project_name__isnull=False
+        ).exclude(
+            project_name=''
+        ).values(
+            'project_name'
+        ).annotate(
+            total=Sum('total_amount'),
+            count=Count('id')
+        ).order_by('-total')
+
+        result = [
+            {
+                'project_name': item['project_name'],
                 'total': item['total'],
                 'count': item['count'],
             }

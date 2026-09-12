@@ -191,6 +191,7 @@ export const salesAPI = {
   getMonthlySummary: (params) => api.get('/sales/invoices/monthly_summary/', { params }),
   getTopProducts: (params) => api.get('/sales/invoices/top_products/', { params }),
   getByDepartment: (params) => api.get('/sales/invoices/by_department/', { params }),
+  getByProject: (params) => api.get('/sales/invoices/by_project/', { params }),
   getDailySales: (params) => api.get('/sales/daily-sales/', { params }),
   exportInvoicesExcel: (params) => {
     const token = localStorage.getItem('access_token');

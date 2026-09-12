@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -17,6 +17,18 @@ from .serializers import (
 )
 
 
+class IsOwner(permissions.BasePermission):
+    """Permission class for owner-only access."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'owner'
+
+
+class IsOwnerOrManager(permissions.BasePermission):
+    """Permission class for owner/manager access."""
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in ['owner', 'manager']
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     """ViewSet for Category management."""
 
@@ -27,6 +39,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsOwnerOrManager()]
+        return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
         # Cache the serialized response for list view
@@ -80,6 +97,11 @@ class SupplierViewSet(viewsets.ModelViewSet):
             return SupplierListSerializer
         return SupplierSerializer
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsOwnerOrManager()]
+        return [IsAuthenticated()]
+
     def list(self, request, *args, **kwargs):
         cache_key = 'suppliers_list'
         cached_data = cache.get(cache_key)
@@ -129,12 +151,8 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [IsAuthenticated()]
         elif self.action in ['create', 'update', 'partial_update', 'destroy']:
-            from staff.models import User
-            if self.request.user.is_authenticated:
-                if self.request.user.role in ['owner', 'manager']:
-                    return [IsAuthenticated()]
-            from rest_framework.permissions import IsAdminUser
-            return [IsAdminUser()]
+            return [IsOwnerOrManager()]
+        return [IsAuthenticated()]
         return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
@@ -210,6 +228,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return ProductListSerializer
         return ProductSerializer
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'adjust_stock']:
+            return [IsOwnerOrManager()]
+        return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
         # Only cache unfiltered first page (no search or filters applied)

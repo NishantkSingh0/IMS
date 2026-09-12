@@ -23,6 +23,19 @@ const PageLoader = () => (
   </div>
 );
 
+// Route permissions based on user roles
+const ROUTE_PERMISSIONS = {
+  '/': ['owner', 'manager', 'cashier', 'worker'],
+  '/inventory': ['owner', 'manager', 'cashier', 'worker'],
+  '/departments': ['owner', 'manager', 'cashier', 'worker'],
+  '/invoices': ['owner', 'manager', 'cashier', 'worker'],
+  '/analytics': ['owner'],
+  '/sales': ['owner', 'manager'],
+  '/staff': ['owner'],
+  '/products': ['owner', 'manager'],
+  '/billing': ['owner', 'manager'],
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,6 +46,25 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Role-based Protected Route Component
+const RoleProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -58,11 +90,46 @@ function App() {
               <Route path="inventory" element={<Inventory />} />
               <Route path="departments" element={<Departments />} />
               <Route path="invoices" element={<Invoices />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="sales" element={<Sales />} />
-              <Route path="staff" element={<Staff />} />
-              <Route path="products" element={<Products />} />
-              <Route path="billing" element={<Billing />} />
+              <Route 
+                path="analytics" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner']}>
+                    <Analytics />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route 
+                path="sales" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner', 'manager']}>
+                    <Sales />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route 
+                path="staff" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner']}>
+                    <Staff />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route 
+                path="products" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner', 'manager']}>
+                    <Products />
+                  </RoleProtectedRoute>
+                } 
+              />
+              <Route 
+                path="billing" 
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner', 'manager']}>
+                    <Billing />
+                  </RoleProtectedRoute>
+                } 
+              />
             </Route>
           </Routes>
         </Suspense>

@@ -275,7 +275,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <span className="text-gray-600">Active Staff</span>
               <span className="font-semibold text-gray-900">
-                {staffStats?.active_users || 0} members
+                {staffStats?.active_staff || 0} members
               </span>
             </div>
           </div>

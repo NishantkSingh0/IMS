@@ -11,7 +11,7 @@ const Sales = () => {
   const [topProducts, setTopProducts] = useState([]);
   const [salesInvoices, setSalesInvoices] = useState(null);
   const [departmentUsage, setDepartmentUsage] = useState([]);
-  const [recentInvoices, setRecentInvoices] = useState([]);
+  const [projectUsage, setProjectUsage] = useState([]);
 
   useEffect(() => {
     fetchSalesData();
@@ -20,19 +20,19 @@ const Sales = () => {
   const fetchSalesData = async () => {
     setLoading(true);
     try {
-      const [dailyRes, salesInvoicesRes, topProductsRes, departmentRes, invoicesRes] = await Promise.all([
+      const [dailyRes, salesInvoicesRes, topProductsRes, departmentRes, projectRes] = await Promise.all([
         salesAPI.getDailySummary({ days: parseInt(dateRange) }),
         salesAPI.getInvoices(),
         salesAPI.getTopProducts({ limit: 10, days: parseInt(dateRange) }),
         salesAPI.getByDepartment({ days: parseInt(dateRange) }),
-        salesAPI.getInvoices({ page_size: 10, ordering: '-created_at' }),
+        salesAPI.getByProject({ days: parseInt(dateRange) }),
       ]);
 
       setDailySales(dailyRes.data || []);
       setSalesInvoices(salesInvoicesRes.data);
       setTopProducts(topProductsRes.data || []);
       setDepartmentUsage(departmentRes.data || []);
-      setRecentInvoices(invoicesRes.data?.results || invoicesRes.data || []);
+      setProjectUsage(projectRes.data || []);
     } catch (error) {
       console.error('Error fetching sales data:', error);
     } finally {
@@ -177,7 +177,7 @@ const Sales = () => {
         </div>
       </div>
 
-      {/* Top Products & Recent Invoices */}
+      {/* Top Products & Project Spending */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Products */}
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -203,29 +203,29 @@ const Sales = () => {
           </div>
         </div>
 
-        {/* Recent Invoices */}
+        {/* Project Wise Spending */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Invoices</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Project Wise Spending</h2>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {recentInvoices.map((invoice) => (
+            {projectUsage.map((project, index) => (
               <div
-                key={invoice.id}
+                key={index}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{invoice.invoice_number}</p>
-                  <p className="text-sm text-gray-500">
-                    {invoice.department_name || '-'} •{' '}
-                    {format(new Date(invoice.created_at), 'MMM d, h:mm a')}
-                  </p>
+                  <p className="font-medium text-gray-900">{project.project_name}</p>
+                  <p className="text-sm text-gray-500">{project.count} invoices</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900">
-                    {formatCurrency(invoice.total_amount)}
+                    {formatCurrency(project.total)}
                   </p>
                 </div>
               </div>
             ))}
+            {projectUsage.length === 0 && (
+              <p className="text-gray-500 text-center py-8">No project spending data yet</p>
+            )}
           </div>
         </div>
       </div>

@@ -15,12 +15,25 @@ const ownerNavigation = [
 
 const managerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
+  { name: 'Sales', href: '/sales', icon: FiShoppingCart },
   { name: 'Issue', href: '/billing', icon: FiShoppingCart },
   { name: 'Products', href: '/products', icon: FiPackage },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
-  { name: 'Staff', href: '/staff', icon: FiUsers },
+];
+
+const cashierNavigation = [
+  { name: 'Dashboard', href: '/', icon: FiHome },
+  { name: 'Outwards', href: '/invoices', icon: FiFileText },
+  { name: 'Inventory', href: '/inventory', icon: FiBox },
+  { name: 'Departments', href: '/departments', icon: FiBriefcase },
+];
+
+const workerNavigation = [
+  { name: 'Dashboard', href: '/', icon: FiHome },
+  { name: 'Inventory', href: '/inventory', icon: FiBox },
+  { name: 'Departments', href: '/departments', icon: FiBriefcase },
 ];
 
 const MainLayout = () => {
@@ -29,8 +42,22 @@ const MainLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  const isOwner = user?.role === 'owner';
-  const navigation = isOwner ? ownerNavigation : managerNavigation;
+  const getNavigationByRole = (role) => {
+    switch (role) {
+      case 'owner':
+        return ownerNavigation;
+      case 'manager':
+        return managerNavigation;
+      case 'cashier':
+        return cashierNavigation;
+      case 'worker':
+        return workerNavigation;
+      default:
+        return workerNavigation;
+    }
+  };
+  
+  const navigation = getNavigationByRole(user?.role);
 
   const handleLogout = () => {
     logout();
@@ -88,7 +115,7 @@ const MainLayout = () => {
               </div>
              <div>
                 <h1 className="text-black font-bold text-lg">IMS</h1>
-                <p className="text-gray-800 text-xs">{isOwner ? 'Owner Dashboard' : 'Manager Dashboard'}</p>
+                <p className="text-gray-800 text-xs capitalize">{user?.role} Dashboard</p>
               </div>
             </div>
 
@@ -165,7 +192,7 @@ const MainLayout = () => {
                 <FiMenu className="w-6 h-6" />
               </button>
 
-              <h1 className="text-lg font-semibold text-gray-800 lg:hidden">{isOwner ? 'Owner Dashboard' : 'Manager Dashboard'}</h1>
+              <h1 className="text-lg font-semibold text-gray-800 lg:hidden capitalize">{user?.role} Dashboard</h1>
             </div>
 
             <button
