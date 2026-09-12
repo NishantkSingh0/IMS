@@ -3,7 +3,7 @@ import { salesAPI } from '../services/api';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FiDollarSign, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
 import { TbMathAvg } from "react-icons/tb";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
@@ -136,16 +136,20 @@ const Analytics = () => {
             <XAxis 
               dataKey="date" 
               stroke="#6b7280"
-              tickFormatter={(v) => format(new Date(v), 'MMM d')}
+              tickFormatter={(v) => format(new Date(v), 'dd-MM-yyyy')}
             />
             <YAxis stroke="#6b7280" yAxisId="left" tickFormatter={(v) => `₹${v / 1000}k`} />
             <YAxis stroke="#6b7280" yAxisId="right" orientation="right" />
             <Tooltip
-              labelFormatter={(v) => format(new Date(v), 'MMMM d, yyyy')}
+              labelFormatter={(v) => format(new Date(v), 'dd-MM-yyyy')}
               formatter={(value, name) =>
                 name === 'Issued Value' ? formatCurrency(value) : value
               }
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+              contentStyle={{
+                borderRadius: '8px',
+                border: 'none',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
             />
             <Legend />
             <Area
@@ -179,11 +183,20 @@ const Analytics = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={monthlySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" stroke="#6b7280" />
+              <XAxis
+                dataKey="month"
+                stroke="#6b7280"
+                tickFormatter={(value) => format(parseISO(value), 'dd-MM-yyyy')}
+              />
               <YAxis stroke="#6b7280" tickFormatter={(v) => `₹${v / 1000}k`} />
               <Tooltip
+                labelFormatter={(value) => format(parseISO(value), 'dd-MM-yyyy')}
                 formatter={(value) => formatCurrency(value)}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
               />
               <Bar dataKey="total_sales" fill="#111827" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -195,10 +208,19 @@ const Analytics = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="month" stroke="#6b7280" />
+              <XAxis
+                dataKey="month"
+                stroke="#6b7280"
+                tickFormatter={(value) => format(parseISO(value), 'dd-MM-yyyy')}
+              />
               <YAxis stroke="#6b7280" />
               <Tooltip
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                labelFormatter={(value) => format(parseISO(value), 'dd-MM-yyyy')}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
               />
               <Line
                 type="monotone"
