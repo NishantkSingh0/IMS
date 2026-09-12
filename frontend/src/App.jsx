@@ -30,7 +30,7 @@ const ROUTE_PERMISSIONS = {
   '/departments': ['owner', 'manager', 'cashier', 'worker'],
   '/invoices': ['owner', 'manager', 'cashier', 'worker'],
   '/analytics': ['owner'],
-  '/sales': ['owner', 'manager'],
+  '/sales': ['owner'],
   '/staff': ['owner'],
   '/products': ['owner', 'manager'],
   '/billing': ['owner', 'manager'],
@@ -101,7 +101,7 @@ function App() {
               <Route 
                 path="sales" 
                 element={
-                  <RoleProtectedRoute allowedRoles={['owner', 'manager']}>
+                  <RoleProtectedRoute allowedRoles={['owner']}>
                     <Sales />
                   </RoleProtectedRoute>
                 } 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { salesAPI, inventoryAPI, staffAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import {
   FiDollarSign,
   FiShoppingBag,
@@ -23,6 +24,7 @@ import {
 } from 'recharts';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [salesStats, setSalesStats] = useState(null);
   const [salesInvoices, setSalesInvoices] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
@@ -100,7 +102,7 @@ const Dashboard = () => {
     },
     {
       name: 'Total Invoices',
-      value: salesInvoices?.count?.toLocaleString() || '0',
+      value: salesStats?.total_invoices?.toLocaleString() || '0',
       icon: FiShoppingBag,
       color: 'bg-indigo-500',
       bgColor: 'bg-indigo-50',
@@ -138,7 +140,7 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm text-gray-500 font-bold">{stat.name}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                {stat.subtext && !stat.subtext.startsWith("0") && (
+                {stat.subtext && (
                   <div className="flex items-center mt-2">
                     <FiAlertTriangle className="w-4 h-4 text-orange-500 mr-1" />
                     <span className="text-sm text-orange-600">{stat.subtext}</span>
@@ -153,134 +155,186 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Issue Value Trend */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Value Trend (30 Days)</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailySales}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return `${date.getDate()}/${date.getMonth() + 1}`;
-                  }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
-                />
-                <Tooltip
-                  formatter={(value) => [formatCurrency(value), 'Issued Value']}
-                  labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                  contentStyle={{
-                    borderRadius: "10px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="total_sales"
-                  stroke="#4f46e5"
-                  strokeWidth={2}
-                  fill="url(#colorRevenue)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Department Usage */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Usage</h3>
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {departmentUsage.map((department) => (
-              <div key={department.department_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{department.department_name}</p>
-                  <p className="text-sm text-gray-500">{department.count} invoices</p>
-                </div>
-                <p className="font-semibold text-indigo-600">{formatCurrency(department.total)}</p>
+      {/* Charts Row - Dynamic layout based on user role */}
+      {user?.role === 'manager' ? (
+        <>
+          {/* Manager: First row with 2 charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Issue Value Trend */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Value Trend (30 Days)</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailySales}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                      }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                    />
+                    <Tooltip
+                      formatter={(value) => [formatCurrency(value), 'Issued Value']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                      contentStyle={{
+                        borderRadius: "10px",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total_sales"
+                      stroke="#4f46e5"
+                      strokeWidth={2}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-            {departmentUsage.length === 0 && (
-              <p className="text-gray-500 text-center py-8">No department usage yet</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Products */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Used Products</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topProducts} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="product__name"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  width={40}
-                />
-                <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
-
-                <Bar
-                  dataKey="total_quantity"
-                  fill="#000000"
-                  radius={[0, 4, 4, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Summary</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Average Order Value</span>
-              <span className="font-semibold text-gray-900">
-                {formatCurrency(salesStats?.average_invoice_value)}
-              </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Issued This Period</span>
-              <span className="font-semibold text-green-600">
-                {formatCurrency(salesStats?.total_sales)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Stock Value</span>
-              <span className="font-semibold text-indigo-600">
-                {formatCurrency(inventoryStats?.total_stock_value)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-600">Active Staff</span>
-              <span className="font-semibold text-gray-900">
-                {staffStats?.active_staff || 0} members
-              </span>
+
+            {/* Department Usage */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Usage</h3>
+              <div className="space-y-3 max-h-72 overflow-y-auto">
+                {departmentUsage.map((department) => (
+                  <div key={department.department_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{department.department_name}</p>
+                      <p className="text-sm text-gray-500">{department.count} invoices</p>
+                    </div>
+                    <p className="font-semibold text-indigo-600">{formatCurrency(department.total)}</p>
+                  </div>
+                ))}
+                {departmentUsage.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">No department usage yet</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+
+          {/* Manager: Second row with Top Products taking full width */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* Top Products */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Used Products</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topProducts} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="product__name"
+                      tick={{ fontSize: 11, fill: '#6b7280' }}
+                      width={40}
+                    />
+                    <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
+
+                    <Bar
+                      dataKey="total_quantity"
+                      fill="#000000"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Owner: Single row with 2 charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Issue Value Trend */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Issue Value Trend (30 Days)</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailySales}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                      }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                    />
+                    <Tooltip
+                      formatter={(value) => [formatCurrency(value), 'Issued Value']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                      contentStyle={{
+                        borderRadius: "10px",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total_sales"
+                      stroke="#4f46e5"
+                      strokeWidth={2}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Products */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Used Products</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topProducts} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="product__name"
+                      tick={{ fontSize: 11, fill: '#6b7280' }}
+                      width={40}
+                    />
+                    <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
+
+                    <Bar
+                      dataKey="total_quantity"
+                      fill="#000000"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

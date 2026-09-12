@@ -15,25 +15,11 @@ const ownerNavigation = [
 
 const managerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
-  { name: 'Sales', href: '/sales', icon: FiShoppingCart },
   { name: 'Issue', href: '/billing', icon: FiShoppingCart },
   { name: 'Products', href: '/products', icon: FiPackage },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
-];
-
-const cashierNavigation = [
-  { name: 'Dashboard', href: '/', icon: FiHome },
-  { name: 'Outwards', href: '/invoices', icon: FiFileText },
-  { name: 'Inventory', href: '/inventory', icon: FiBox },
-  { name: 'Departments', href: '/departments', icon: FiBriefcase },
-];
-
-const workerNavigation = [
-  { name: 'Dashboard', href: '/', icon: FiHome },
-  { name: 'Inventory', href: '/inventory', icon: FiBox },
-  { name: 'Departments', href: '/departments', icon: FiBriefcase },
 ];
 
 const MainLayout = () => {

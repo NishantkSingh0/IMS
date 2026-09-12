@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -17,6 +18,7 @@ import {
 
 const Invoices = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,17 +37,33 @@ const Invoices = () => {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    fetchInvoices();
-  }, [searchQuery, projectFilter, fromDate, toDate]);
+    const searchParams = new URLSearchParams(location.search);
+
+    const projectParam = searchParams.get('project');
+    const departmentParam = searchParams.get('department');
+
+    setProjectFilter(projectParam || '');
+    setSearchQuery(departmentParam || '');
+  }, [location.search]);
+
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
+    setPagination(prev => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  }, [searchQuery, projectFilter, fromDate, toDate]);
+
+
+  useEffect(() => {
     fetchInvoices();
-  }, [pagination.currentPage]);
+  }, [
+    searchQuery,
+    projectFilter,
+    fromDate,
+    toDate,
+    pagination.currentPage
+  ]);
 
   const fetchInvoices = async () => {
     try {

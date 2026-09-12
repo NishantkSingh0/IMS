@@ -440,9 +440,10 @@ const Products = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                   <select
                     disabled={editingProduct !== null}
+                    required
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -456,8 +457,9 @@ const Products = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit*</label>
                   <select
+                    required
                     disabled={editingProduct !== null}
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
@@ -515,10 +517,11 @@ const Products = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Min Stock Level
+                    Min Stock Level *
                   </label>
                   <input
                     type="number"
+                    required
                     value={formData.min_stock_level}
                     onChange={(e) => setFormData({ ...formData, min_stock_level: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
@@ -527,9 +530,10 @@ const Products = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    GST Rate (%)
+                    GST Rate (%) *
                   </label>
                   <input
+                    required
                     type="number"
                     disabled={editingProduct !== null}
                     value={formData.gst_rate}

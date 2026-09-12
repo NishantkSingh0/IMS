@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { salesAPI } from '../services/api';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { FiCalendar, FiDollarSign, FiShoppingCart, FiBriefcase } from 'react-icons/fi';
 
 const Sales = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('7');
   const [dailySales, setDailySales] = useState([]);
@@ -162,7 +164,11 @@ const Sales = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Department Usage</h2>
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
             {departmentUsage.map((department) => (
-              <div key={department.department_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div
+                key={department.department_id}
+                onClick={() => navigate(`/invoices?department=${encodeURIComponent(department.department_name)}`)}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              >
                 <div>
                   <p className="font-medium text-gray-900">{department.department_name}</p>
                   <p className="text-sm text-gray-500">{department.count} invoices</p>
@@ -210,7 +216,8 @@ const Sales = () => {
             {projectUsage.map((project, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                onClick={() => navigate(`/invoices?project=${encodeURIComponent(project.project_name)}`)}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
               >
                 <div>
                   <p className="font-medium text-gray-900">{project.project_name}</p>

@@ -210,16 +210,27 @@ const Departments = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {editingDepartment ? 'Edit Department' : 'Add Department'}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {editingDepartment ? 'Edit Department' : 'Add Department'}
+                </h3>
+
+                <span className="text-sm text-gray-500">
+                  Some fields are disabled to ensure integrity over past transactions
+                </span>
+              </div>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
                 <FiX className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <input
                 type="text"
+                disabled={editingDepartment}
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -229,6 +240,7 @@ const Departments = () => {
               <input
                 type="text"
                 required
+                disabled={editingDepartment}
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 placeholder="Department code"
