@@ -59,7 +59,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def products(self, request, pk=None):
         """Get all products in a category."""
         category = self.get_object()
-        products = category.products.filter(is_active=True)
+        products = category.products.all()
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
@@ -102,14 +102,6 @@ class SupplierViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.delete()
         cache.delete('suppliers_list')
-    
-    @action(detail=True, methods=['get'])
-    def products(self, request, pk=None):
-        """Get all products from a supplier."""
-        supplier = self.get_object()
-        products = supplier.products.filter(is_active=True)
-        serializer = ProductListSerializer(products, many=True)
-        return Response(serializer.data)
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
@@ -206,10 +198,10 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     """ViewSet for Product management."""
 
-    queryset = Product.objects.select_related('category', 'supplier').all()
+    queryset = Product.objects.select_related('category').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['category', 'supplier', 'is_active', 'unit']
+    filterset_fields = ['category', 'unit']
     search_fields = ['name', 'tally_name', 'sku', 'description']
     ordering_fields = ['name', 'current_stock', 'created_at']
     ordering = ['name']
@@ -221,7 +213,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         # Only cache unfiltered first page (no search or filters applied)
-        has_filters = any(request.query_params.get(key) for key in ['search', 'category', 'supplier', 'is_active', 'unit'])
+        has_filters = any(request.query_params.get(key) for key in ['search', 'category', 'unit'])
         page = request.query_params.get('page')
 
         if not has_filters and (not page or page == '1'):
@@ -270,16 +262,15 @@ class ProductViewSet(viewsets.ModelViewSet):
     def low_stock(self, request):
         """Get all low stock products."""
         products = self.queryset.filter(
-            is_active=True,
             current_stock__lte=F('min_stock_level')
         )
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['get'])
     def out_of_stock(self, request):
         """Get all out of stock products."""
-        products = self.queryset.filter(is_active=True, current_stock=0)
+        products = self.queryset.filter(current_stock=0)
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
@@ -292,18 +283,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         if cached_data is not None:
             return Response(cached_data)
 
-        queryset = self.queryset.filter(is_active=True)
+        queryset = self.queryset
 
         stats = {
             'total_products': Product.objects.count(),
-            'active_products': queryset.count(),
             'low_stock_count': queryset.filter(current_stock__lte=F('min_stock_level')).count(),
             'out_of_stock_count': queryset.filter(current_stock=0).count(),
             'total_stock_value': queryset.aggregate(
                 total=Sum(F('current_stock') * F('cost_price'))
             )['total'] or 0,
-            'total_categories': Category.objects.filter(is_active=True).count(),
-            'total_suppliers': Supplier.objects.filter(is_active=True).count(),
+            'total_categories': Category.objects.count(),
+            'total_suppliers': Supplier.objects.count(),
         }
         cache.set(cache_key, stats, settings.CACHE_TIMEOUTS.get('stats', 60))
         return Response(stats)

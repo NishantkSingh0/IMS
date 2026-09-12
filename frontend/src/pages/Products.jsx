@@ -97,6 +97,18 @@ const Products = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent stock from being decreased while editing
+    if (
+      editingProduct &&
+      Number(formData.current_stock) < Number(editingProduct.current_stock)
+    ) {
+      toast.error(
+        `Stock cannot be decreased. Current stock is ${editingProduct.current_stock} ${editingProduct.unit}.`
+      );
+      return;
+    }
+
     try {
       // Convert gst_rate to number before sending to backend
       const submissionData = {
@@ -111,6 +123,7 @@ const Products = () => {
         await inventoryAPI.createProduct(submissionData);
         toast.success('Product created successfully');
       }
+
       setShowModal(false);
       resetForm();
       fetchProducts();
@@ -150,7 +163,7 @@ const Products = () => {
         setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
       },
       title: 'Delete Product',
-      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      message: 'Are you sure you want to delete this product? This action cannot be undone. this activity will be recorded.',
     });
   };
 
@@ -478,14 +491,27 @@ const Products = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current Stock *
                   </label>
+
                   <input
                     type="number"
                     value={formData.current_stock}
-                    onChange={(e) => setFormData({ ...formData, current_stock: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        current_stock: e.target.value
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     required
-                    min="0"
+                    min={editingProduct ? editingProduct.current_stock : 0}
                   />
+
+                  {editingProduct &&
+                    Number(formData.current_stock) < Number(editingProduct.current_stock) && (
+                      <p className="mt-1 text-sm text-red-600">
+                        Decreasing stock not allowed.
+                      </p>
+                    )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

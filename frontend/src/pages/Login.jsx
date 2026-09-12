@@ -368,7 +368,7 @@ const Login = () => {
             </form>
 
             {/* Demo credentials */}
-            <div className="mt-8 p-4 rounded-xl bg-white/[0.04] border border-white/10">
+            {/* <div className="mt-8 p-4 rounded-xl bg-white/[0.04] border border-white/10">
               <p className="text-xs font-semibold text-white/50 mb-2.5 tracking-wide uppercase">
                 Demo credentials
               </p>
@@ -385,7 +385,7 @@ const Login = () => {
                   </>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

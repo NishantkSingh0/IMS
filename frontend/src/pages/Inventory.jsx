@@ -92,7 +92,7 @@ const Inventory = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Products"
-          value={stats?.active_products || 0}
+          value={stats?.total_products || 0}
           icon={FiPackage}
           color="indigo"
         />
@@ -156,7 +156,11 @@ const Inventory = () => {
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "10px",
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -187,7 +191,7 @@ const Inventory = () => {
 
               <Tooltip
                 contentStyle={{
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   border: 'none',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
@@ -222,7 +226,7 @@ const Inventory = () => {
               {lowStockProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center justify-between p-3 bg-orange-50 border border-orange-100 rounded-lg"
+                  className={`flex items-center justify-between p-3 ${product.current_stock<=1 ? 'bg-red-50':'bg-orange-50'} border border-orange-100 rounded-lg`}
                 >
                   <div>
                     <p className="font-medium text-gray-900">{product.name}</p>
@@ -306,7 +310,7 @@ const StatCard = ({ title, value, icon: Icon, color, alert }) => {
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-sm text-gray-500 font-bold">{title}</p>
           <div className="flex items-center space-x-2">
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             {alert && <FiAlertTriangle className="w-5 h-5 text-red-500" />}

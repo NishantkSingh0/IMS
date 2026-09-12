@@ -53,19 +53,8 @@ class Customer(models.Model):
     
     def update_stats(self):
         """Update cached statistics."""
-        from sales.models import Invoice
-        invoices = Invoice.objects.filter(
-            customer=self,
-            payment_status__in=['paid', 'partial']
-        )
-        self.total_purchases = invoices.aggregate(
-            total=models.Sum('total_amount')
-        )['total'] or 0
-        self.total_orders = invoices.count()
-        self.outstanding_amount = invoices.aggregate(
-            total=models.Sum('due_amount')
-        )['total'] or 0
-        self.save()
+        # Customer relationship removed from Invoice model, stats no longer calculated
+        pass
 
 
 class CustomerHistory(models.Model):

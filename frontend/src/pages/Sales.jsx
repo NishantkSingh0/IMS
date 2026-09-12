@@ -9,6 +9,7 @@ const Sales = () => {
   const [dateRange, setDateRange] = useState('7');
   const [dailySales, setDailySales] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const [salesInvoices, setSalesInvoices] = useState(null);
   const [departmentUsage, setDepartmentUsage] = useState([]);
   const [recentInvoices, setRecentInvoices] = useState([]);
 
@@ -19,14 +20,16 @@ const Sales = () => {
   const fetchSalesData = async () => {
     setLoading(true);
     try {
-      const [dailyRes, topProductsRes, departmentRes, invoicesRes] = await Promise.all([
+      const [dailyRes, salesInvoicesRes, topProductsRes, departmentRes, invoicesRes] = await Promise.all([
         salesAPI.getDailySummary({ days: parseInt(dateRange) }),
+        salesAPI.getInvoices(),
         salesAPI.getTopProducts({ limit: 10, days: parseInt(dateRange) }),
         salesAPI.getByDepartment({ days: parseInt(dateRange) }),
         salesAPI.getInvoices({ page_size: 10, ordering: '-created_at' }),
       ]);
 
       setDailySales(dailyRes.data || []);
+      setSalesInvoices(salesInvoicesRes.data);
       setTopProducts(topProductsRes.data || []);
       setDepartmentUsage(departmentRes.data || []);
       setRecentInvoices(invoicesRes.data?.results || invoicesRes.data || []);
@@ -93,7 +96,7 @@ const Sales = () => {
             <div>
               <p className="text-sm text-gray-500">Period Invoices</p>
               <p className="text-2xl font-bold text-purple-600">
-                {dailySales.reduce((sum, d) => sum + (d.invoice_count || 0), 0)}
+                {salesInvoices?.count?.toLocaleString() || 0}
               </p>
             </div>
             <FiShoppingCart className="w-8 h-8 text-purple-400" />

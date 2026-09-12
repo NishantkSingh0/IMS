@@ -24,6 +24,7 @@ import {
 
 const Dashboard = () => {
   const [salesStats, setSalesStats] = useState(null);
+  const [salesInvoices, setSalesInvoices] = useState(null);
   const [inventoryStats, setInventoryStats] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [staffStats, setStaffStats] = useState(null);
@@ -40,6 +41,7 @@ const Dashboard = () => {
     try {
       const [
         salesRes,
+        salesInvoicesRes,
         inventoryRes,
         departmentsRes,
         staffRes,
@@ -48,6 +50,7 @@ const Dashboard = () => {
         topProductsRes,
       ] = await Promise.all([
         salesAPI.getStats(),
+        salesAPI.getInvoices(),
         inventoryAPI.getStats(),
         inventoryAPI.getDepartments(),
         staffAPI.getStats(),
@@ -57,6 +60,7 @@ const Dashboard = () => {
       ]);
 
       setSalesStats(salesRes.data);
+      setSalesInvoices(salesInvoicesRes.data);
       setInventoryStats(inventoryRes.data);
       setDepartments(departmentsRes.data.results || departmentsRes.data);
       setStaffStats(staffRes.data);
@@ -90,17 +94,13 @@ const Dashboard = () => {
     {
       name: 'Issued Value',
       value: formatCurrency(salesStats?.total_sales),
-      change: '+12.5%',
-      changeType: 'increase',
       icon: FiDollarSign,
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
     },
     {
       name: 'Total Invoices',
-      value: salesStats?.total_invoices?.toLocaleString() || '0',
-      change: '+8.2%',
-      changeType: 'increase',
+      value: salesInvoices?.count?.toLocaleString() || '0',
       icon: FiShoppingBag,
       color: 'bg-indigo-500',
       bgColor: 'bg-indigo-50',
@@ -108,15 +108,13 @@ const Dashboard = () => {
     {
       name: 'Active Departments',
       value: departments.filter((department) => department.is_active).length.toLocaleString(),
-      change: '+5.1%',
-      changeType: 'increase',
       icon: FiBriefcase,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
     },
     {
       name: 'Products in Stock',
-      value: inventoryStats?.active_products?.toLocaleString() || '0',
+      value: inventoryStats?.total_products?.toLocaleString() || '0',
       subtext: `${inventoryStats?.low_stock_count || 0} low stock`,
       icon: FiPackage,
       color: 'bg-orange-500',
@@ -138,26 +136,9 @@ const Dashboard = () => {
           <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{stat.name}</p>
+                <p className="text-sm text-gray-500 font-bold">{stat.name}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                {stat.change && (
-                  <div className="flex items-center mt-2">
-                    {stat.changeType === 'increase' ? (
-                      <FiTrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                    ) : (
-                      <FiTrendingDown className="w-4 h-4 text-red-500 mr-1" />
-                    )}
-                    <span
-                      className={`text-sm ${
-                        stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                    <span className="text-gray-400 text-sm ml-1">vs last month</span>
-                  </div>
-                )}
-                {stat.subtext && (
+                {stat.subtext && !stat.subtext.startsWith("0") && (
                   <div className="flex items-center mt-2">
                     <FiAlertTriangle className="w-4 h-4 text-orange-500 mr-1" />
                     <span className="text-sm text-orange-600">{stat.subtext}</span>
@@ -202,6 +183,9 @@ const Dashboard = () => {
                 <Tooltip
                   formatter={(value) => [formatCurrency(value), 'Issued Value']}
                   labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                  contentStyle={{
+                    borderRadius: "10px",
+                  }}
                 />
                 <Area
                   type="monotone"
@@ -254,7 +238,7 @@ const Dashboard = () => {
                   tick={{ fontSize: 11, fill: '#6b7280' }}
                   width={40}
                 />
-                <Tooltip formatter={(value) => [`${value} units`, 'Issued']} />
+                <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
 
                 <Bar
                   dataKey="total_quantity"

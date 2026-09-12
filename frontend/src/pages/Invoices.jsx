@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import {
   FiSearch,
   FiEye,
@@ -15,6 +16,7 @@ import {
 } from 'react-icons/fi';
 
 const Invoices = () => {
+  const { user } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -161,8 +163,8 @@ const Invoices = () => {
             </button>
           )}
 
-          {/* Download Button - Only visible when filters are applied */}
-          {(searchQuery || projectFilter || fromDate || toDate) && (
+          {/* Download Button - Only visible when filters are applied and user is owner */}
+          {((searchQuery || projectFilter || fromDate || toDate) && invoices.length>0 && user?.role === 'owner') && (
             <button
               onClick={handleExportExcel}
               className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition"

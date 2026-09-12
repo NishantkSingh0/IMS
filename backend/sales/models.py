@@ -6,58 +6,30 @@ import uuid
 
 class Invoice(models.Model):
     """Invoice/Bill model."""
-    
-    PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('partial', 'Partially Paid'),
-        ('paid', 'Paid'),
-        ('overdue', 'Overdue'),
-        ('cancelled', 'Cancelled'),
-    ]
-    
-    PAYMENT_METHOD_CHOICES = [
-        ('cash', 'Cash'),
-        ('card', 'Card'),
-        ('upi', 'UPI'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('credit', 'Credit'),
-        ('other', 'Other'),
-    ]
-    
+
     invoice_number = models.CharField(max_length=50, unique=True)
-    customer = models.ForeignKey('crm.Customer', on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
     department = models.ForeignKey('inventory.Department', on_delete=models.PROTECT, null=True, blank=True, related_name='invoices')
     project_name = models.CharField(max_length=200, blank=True)
     project_created_by = models.CharField(max_length=200, blank=True)
-    
+
     # Amounts
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    due_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    
-    # Payment info
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
-    payment_reference = models.CharField(max_length=100, blank=True)
-    
+
     # Dates
     invoice_date = models.DateField(auto_now_add=True)
-    due_date = models.DateField(blank=True, null=True)
-    
+
     # Notes
     notes = models.TextField(blank=True)
-    
+
     # Staff
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_invoices')
-    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updated_invoices')
-    
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = 'Invoice'
@@ -70,34 +42,24 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         if not self.invoice_number:
             self.invoice_number = f"SLIP-{uuid.uuid4().hex[:8].upper()}"
-        
-        # Calculate due amount
-        self.due_amount = self.total_amount - self.paid_amount
-        
-        # Update payment status
-        if self.paid_amount >= self.total_amount:
-            self.payment_status = 'paid'
-        elif self.paid_amount > 0:
-            self.payment_status = 'partial'
-        
+
         super().save(*args, **kwargs)
-    
+
     def calculate_totals(self):
         """Calculate invoice totals from items."""
         items = self.items.all()
         self.subtotal = sum(item.total for item in items)
-        
+
         # Apply discount
         if self.discount_percentage > 0:
             self.discount_amount = self.subtotal * (self.discount_percentage / 100)
-        
+
         # Calculate tax
         self.tax_amount = sum(item.tax_amount for item in items)
-        
+
         # Calculate total
         self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
-        self.due_amount = self.total_amount - self.paid_amount
-        
+
         self.save()
 
 
@@ -135,18 +97,9 @@ class InvoiceItem(models.Model):
 
 class Payment(models.Model):
     """Payment record model."""
-    
-    PAYMENT_METHOD_CHOICES = [
-        ('cash', 'Cash'),
-        ('card', 'Card'),
-        ('upi', 'UPI'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('other', 'Other'),
-    ]
-    
+
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     reference = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
     received_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -162,10 +115,6 @@ class Payment(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Update invoice paid amount
-        total_paid = self.invoice.payments.aggregate(total=models.Sum('amount'))['total'] or 0
-        self.invoice.paid_amount = total_paid
-        self.invoice.save()
 
 
 class DailySales(models.Model):

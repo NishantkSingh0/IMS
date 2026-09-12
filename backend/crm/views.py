@@ -83,13 +83,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def purchase_history(self, request, pk=None):
         """Get customer's purchase history."""
-        customer = self.get_object()
-        from sales.models import Invoice
-        from sales.serializers import InvoiceListSerializer
-        
-        invoices = Invoice.objects.filter(customer=customer).order_by('-created_at')[:50]
-        serializer = InvoiceListSerializer(invoices, many=True)
-        return Response(serializer.data)
+        # Customer relationship removed from Invoice model
+        return Response([], status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'])
     def add_note(self, request, pk=None):

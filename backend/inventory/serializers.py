@@ -114,7 +114,6 @@ class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model."""
 
     category_name = serializers.CharField(source='category.name', read_only=True)
-    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     stock_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
@@ -122,10 +121,10 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'name', 'tally_name', 'description',
-            'category', 'category_name', 'supplier', 'supplier_name',
-            'cost_price', 'mrp',
-            'current_stock', 'min_stock_level', 'max_stock_level', 'unit',
-            'gst_rate', 'hsn_code', 'image', 'is_active',
+            'category', 'category_name',
+            'cost_price',
+            'current_stock', 'min_stock_level', 'unit',
+            'gst_rate', 'hsn_code',
             'is_low_stock', 'stock_value',
             'created_at', 'updated_at'
         ]
@@ -147,11 +146,6 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cost price is too high")
         return value
 
-    def validate_mrp(self, value):
-        if value and value < 0:
-            raise serializers.ValidationError("MRP cannot be negative")
-        return value
-
     def validate_gst_rate(self, value):
         if value < 0 or value > 100:
             raise serializers.ValidationError("GST rate must be between 0 and 100")
@@ -159,16 +153,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         min_stock = data.get('min_stock_level')
-        max_stock = data.get('max_stock_level')
 
         if min_stock is not None and min_stock < 0:
             raise serializers.ValidationError("Minimum stock level cannot be negative")
-
-        if max_stock is not None and max_stock < 0:
-            raise serializers.ValidationError("Maximum stock level cannot be negative")
-
-        if min_stock is not None and max_stock is not None and max_stock < min_stock:
-            raise serializers.ValidationError("Maximum stock level cannot be less than minimum stock level")
 
         return data
 
@@ -183,7 +170,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'name', 'tally_name', 'category', 'category_name',
-            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'is_low_stock', 'is_active', 'image'
+            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'is_low_stock'
         ]
 
 
@@ -231,9 +218,8 @@ class LowStockAlertSerializer(serializers.ModelSerializer):
 
 class InventoryStatsSerializer(serializers.Serializer):
     """Serializer for inventory statistics."""
-    
+
     total_products = serializers.IntegerField()
-    active_products = serializers.IntegerField()
     low_stock_count = serializers.IntegerField()
     out_of_stock_count = serializers.IntegerField()
     total_stock_value = serializers.DecimalField(max_digits=15, decimal_places=2)

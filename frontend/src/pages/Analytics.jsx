@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { salesAPI } from '../services/api';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FiDollarSign, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { TbMathAvg } from "react-icons/tb";
 import { format } from 'date-fns';
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('7');
   const [dailySales, setDailySales] = useState([]);
+  const [salesInvoices, setSalesInvoices] = useState(null);
   const [monthlySales, setMonthlySales] = useState([]);
   const [stats, setStats] = useState(null);
 
@@ -18,11 +20,13 @@ const Analytics = () => {
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
-      const [dailyRes, monthlyRes, statsRes] = await Promise.all([
+      const [dailyRes, salesInvoicesRes, monthlyRes, statsRes] = await Promise.all([
         salesAPI.getDailySummary({ days: parseInt(dateRange) }),
+        salesAPI.getInvoices(),
         salesAPI.getMonthlySummary({ months: 12 }),
         salesAPI.getStats(),
       ]);
+      setSalesInvoices(salesInvoicesRes.data);
       setDailySales(dailyRes.data || []);
       setMonthlySales(monthlyRes.data || []);
       setStats(statsRes.data);
@@ -43,9 +47,17 @@ const Analytics = () => {
 
   const calculateGrowth = () => {
     if (monthlySales.length < 2) return 0;
+
     const current = monthlySales[monthlySales.length - 1]?.total_sales || 0;
-    const previous = monthlySales[monthlySales.length - 2]?.total_sales || 1;
-    return ((current - previous) / previous * 100).toFixed(1);
+    const previous = monthlySales[monthlySales.length - 2]?.total_sales || 0;
+
+    if (previous === 0) {
+      return current > 0 ? 100 : 0;
+    }
+
+    const growth = ((current - previous) / previous) * 100;
+
+    return Math.max(-100, Math.min(100, growth)).toFixed(1);
   };
 
   if (loading) {
@@ -87,18 +99,18 @@ const Analytics = () => {
         />
         <KPICard
           title="Total Invoices"
-          value={stats?.total_invoices || 0}
+          value={salesInvoices?.count?.toLocaleString() || 0}
           icon={FiShoppingCart}
           color="purple"
         />
         <KPICard
           title="Avg Invoice Value"
           value={formatCurrency(stats?.average_invoice_value)}
-          icon={FiTrendingUp}
+          icon={TbMathAvg}
           color="cyan"
         />
         <KPICard
-          title="Growth Rate"
+          title="Outward Growth Rate"
           value={`${calculateGrowth()}%`}
           icon={FiTrendingUp}
           color={parseFloat(calculateGrowth()) >= 0 ? 'emerald' : 'red'}
@@ -217,7 +229,7 @@ const KPICard = ({ title, value, icon: Icon, color }) => {
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-sm text-gray-500 font-bold">{title}</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>

@@ -24,16 +24,16 @@ class InvoiceFilter(FilterSet):
     project_name = CharFilter(field_name='project_name', lookup_expr='icontains')
     created_at_gte = DateFilter(field_name='created_at', lookup_expr='gte')
     created_at_lte = DateFilter(field_name='created_at', lookup_expr='lte')
-    
+
     class Meta:
         model = Invoice
-        fields = ['department', 'customer', 'created_by', 'project_name']
+        fields = ['department', 'created_by', 'project_name']
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     """ViewSet for Invoice management."""
 
-    queryset = Invoice.objects.select_related('customer', 'department', 'created_by').prefetch_related('items', 'payments').all()
+    queryset = Invoice.objects.select_related('department', 'created_by').prefetch_related('items', 'payments').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = InvoiceFilter
@@ -50,7 +50,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         # Only cache unfiltered list (first page, no filters)
-        has_filters = any(request.query_params.get(key) for key in ['search', 'department', 'customer', 'created_by', 'project_name', 'created_at_gte', 'created_at_lte'])
+        has_filters = any(request.query_params.get(key) for key in ['search', 'department', 'created_by', 'project_name', 'created_at_gte', 'created_at_lte'])
         page = request.query_params.get('page')
 
         if not has_filters and (not page or page == '1'):
@@ -88,7 +88,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
-        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
 
     def perform_update(self, serializer):
@@ -99,7 +98,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
-        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
 
     def perform_destroy(self, instance):
@@ -110,7 +108,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         cache.delete_many([cache.make_key(k) for k in cache.keys('daily_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('monthly_summary_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('top_products_*') if cache.make_key(k)])
-        cache.delete_many([cache.make_key(k) for k in cache.keys('by_payment_method_*') if cache.make_key(k)])
         cache.delete_many([cache.make_key(k) for k in cache.keys('by_department_*') if cache.make_key(k)])
 
     def create(self, request, *args, **kwargs):
@@ -132,8 +129,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def pending(self, request):
-        """Get pending/unpaid invoices."""
-        invoices = self.queryset.filter(payment_status__in=['pending', 'partial'])
+        """Get all invoices."""
+        invoices = self.queryset.all()
         serializer = InvoiceListSerializer(invoices, many=True)
         return Response(serializer.data)
     
@@ -153,21 +150,19 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         """Export filtered invoices to Excel with product-wise data."""
         # Apply the same filters as the list view
         queryset = self.filter_queryset(self.get_queryset())
-        
+
         # Get all matching invoices (no pagination)
-        invoices = queryset.select_related('customer', 'department', 'created_by').prefetch_related('items').all()
-        
+        invoices = queryset.select_related('department', 'created_by').prefetch_related('items').all()
+
         # Prepare data for Excel export
         data = []
         for invoice in invoices:
-            for item in invoice.items.all():
+            for i, item in enumerate(invoice.items.all()):
                 data.append({
-                    'Invoice Number': invoice.invoice_number,
-                    'Invoice Date': invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '',
-                    'Created At': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S') if invoice.created_at else '',
+                    'Slip': i,
+                    'Slip ID': invoice.invoice_number,
+                    'Outward At': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S') if invoice.created_at else '',
                     'Department': invoice.department.name if invoice.department else '',
-                    'Department Code': invoice.department.code if invoice.department else '',
-                    'Customer': invoice.customer.name if invoice.customer else '',
                     'Project Name': invoice.project_name or '',
                     'Project Created By': invoice.project_created_by or '',
                     'Product SKU': item.product_sku or '',
@@ -178,24 +173,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     'Tax Rate (%)': float(item.tax_rate) if item.tax_rate else 0,
                     'Tax Amount': float(item.tax_amount) if item.tax_amount else 0,
                     'Total': float(item.total) if item.total else 0,
-                    'Payment Status': invoice.payment_status,
-                    'Payment Method': invoice.payment_method or '',
-                    'Payment Reference': invoice.payment_reference or '',
-                    'Created By': invoice.created_by.get_full_name() if invoice.created_by else '',
-                    'Notes': invoice.notes or '',
+                    'Outward By': invoice.created_by.get_full_name() if invoice.created_by else '',
                 })
-        
+
         # Create DataFrame
         df = pd.DataFrame(data)
-        
+
         # Create Excel response
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="outward_slips_export.xlsx"'
-        
+
         # Write to Excel
         with pd.ExcelWriter(response, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Outward Slips', index=False)
-            
+
             # Auto-adjust column widths
             worksheet = writer.sheets['Outward Slips']
             for idx, col in enumerate(df.columns, 1):
@@ -204,29 +195,20 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     len(str(col))
                 )
                 worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
-        
+
         return response
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """Cancel an invoice."""
         invoice = self.get_object()
-        
-        if invoice.payment_status == 'paid':
-            return Response(
-                {'error': 'Cannot cancel a paid invoice'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        invoice.payment_status = 'cancelled'
-        invoice.save()
-        
+
         # Restore stock for all items
         for item in invoice.items.all():
             if item.product:
                 item.product.current_stock += item.quantity
                 item.product.save()
-        
+
         return Response(InvoiceSerializer(invoice).data)
     
     @action(detail=False, methods=['get'])
@@ -244,14 +226,13 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         queryset = self.queryset.filter(
             invoice_date__gte=start_date,
-        ).exclude(payment_status='cancelled')
+        )
 
         stats = queryset.aggregate(
             total_sales=Sum('total_amount'),
             total_invoices=Count('id'),
             total_tax_collected=Sum('tax_amount'),
             total_discounts=Sum('discount_amount'),
-            pending_amount=Sum('due_amount'),
             average_invoice_value=Avg('total_amount')
         )
 
@@ -283,7 +264,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
-        ).exclude(payment_status='cancelled').annotate(
+        ).annotate(
             date=TruncDate('created_at')
         ).values('date').annotate(
             total_sales=Sum('total_amount'),
@@ -308,7 +289,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         summary = self.queryset.filter(
             invoice_date__gte=start_date,
-        ).exclude(payment_status='cancelled').annotate(
+        ).annotate(
             month=TruncMonth('created_at')
         ).values('month').annotate(
             total_sales=Sum('total_amount'),
@@ -334,7 +315,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         top_products = InvoiceItem.objects.filter(
             invoice__invoice_date__gte=start_date,
-        ).exclude(invoice__payment_status='cancelled').values(
+        ).values(
             'product_id', 'product_name'
         ).annotate(
             total_quantity=Sum('quantity'),
@@ -345,29 +326,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
         return Response(result)
     
-    @action(detail=False, methods=['get'])
-    def by_payment_method(self, request):
-        """Get sales breakdown by payment method."""
-        days = int(request.query_params.get('days', 30))
-        cache_key = f'by_payment_method_{days}'
-        cached_data = cache.get(cache_key)
-        if cached_data is not None:
-            return Response(cached_data)
-
-        start_date = timezone.now().date() - timedelta(days=days)
-
-        breakdown = self.queryset.filter(
-            invoice_date__gte=start_date,
-            payment_status__in=['paid', 'partial']
-        ).values('payment_method').annotate(
-            total=Sum('paid_amount'),
-            count=Count('id')
-        )
-
-        result = list(breakdown)
-        cache.set(cache_key, result, settings.CACHE_TIMEOUTS.get('stats', 60))
-        return Response(result)
-
     @action(detail=False, methods=['get'])
     def by_department(self, request):
         """Get invoice value breakdown by department."""
@@ -382,7 +340,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         breakdown = self.queryset.filter(
             invoice_date__gte=start_date,
             department__isnull=False
-        ).exclude(payment_status='cancelled').values(
+        ).values(
             'department_id',
             'department__name',
             'department__code',
@@ -407,14 +365,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
 class PaymentViewSet(viewsets.ModelViewSet):
     """ViewSet for Payment management."""
-    
+
     queryset = Payment.objects.select_related('invoice', 'received_by').all()
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['invoice', 'payment_method', 'received_by']
+    filterset_fields = ['invoice', 'received_by']
     ordering = ['-payment_date']
-    
+
     def perform_create(self, serializer):
         serializer.save(received_by=self.request.user)
 

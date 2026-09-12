@@ -273,7 +273,6 @@ class Command(BaseCommand):
             category_name = prod_data.pop('category')
             category = categories.get(category_name)
 
-            supplier = random.choice(suppliers) if suppliers else None
             stock = prod_data.pop('stock')
             gst_rate = prod_data.pop('gst_rate', 18)
 
@@ -282,10 +281,8 @@ class Command(BaseCommand):
                 defaults={
                     **prod_data,
                     'category': category,
-                    'supplier': supplier,
                     'current_stock': stock,
                     'min_stock_level': 10,
-                    'max_stock_level': 1000,
                     'gst_rate': gst_rate,
                 }
             )
@@ -329,67 +326,59 @@ class Command(BaseCommand):
         """Create invoices with items for the past 3 months."""
         from sales.models import Invoice, InvoiceItem, Payment
         from inventory.models import Product, StockTransaction, Department
-        from crm.models import Customer
         from staff.models import User
-        
-        customers = list(Customer.objects.all())
-        products = list(Product.objects.filter(is_active=True))
+
+        products = list(Product.objects.all())
         departments = list(Department.objects.filter(is_active=True))
         staff = list(User.objects.filter(role__in=['manager', 'cashier']))
-        
+
         if not staff:
             staff = [User.objects.first()]
-        
-        payment_methods = ['cash', 'card', 'upi', 'bank_transfer']
-        
+
         # Generate invoices for the past 90 days
         today = timezone.now().date()
-        
+
         invoices_created = 0
-        
+
         for days_ago in range(90, -1, -1):
             invoice_date = today - timedelta(days=days_ago)
-            
+
             # 2-5 invoices per day
             num_invoices = random.randint(2, 5)
-            
+
             for _ in range(num_invoices):
-                customer = random.choice(customers) if random.random() > 0.3 else None
                 created_by = random.choice(staff)
-                payment_method = random.choice(payment_methods)
                 department = random.choice(departments) if departments and random.random() > 0.4 else None
-                
+
                 # Generate project name for department invoices
                 project_name = ''  # Always provide empty string to avoid NOT NULL constraint
                 project_created_by = ''
                 if department:
                     project_name = random.choice(['NELSON BED', 'Harper Sofa (Fabric2)', 'NOVA BOOKSHELF', 'RELAX CHAIR', 'NIGHT TABLE', 'LOW CABINET', 'MNZ POUF WITH TRAY', 'BASTIEN BED SIDE NIGHT TABLE'])
                     project_created_by = random.choice(['Nishant Singh', 'Aditi Marchanda', 'Rajender Kumar', 'Bot'])
-                
+
                 invoice = Invoice.objects.create(
-                    customer=customer,
                     department=department,
                     project_name=project_name,
                     project_created_by=project_created_by,
-                    payment_method=payment_method,
                     notes=f'Sale on {invoice_date}',
                     created_by=created_by,
                 )
-                
+
                 # Override the auto-created date with timezone awareness
                 from django.utils.timezone import make_aware
                 Invoice.objects.filter(pk=invoice.pk).update(
                     invoice_date=invoice_date,
                     created_at=make_aware(datetime.combine(invoice_date, datetime.now().time()))
                 )
-                
+
                 # Add 1-5 items per invoice
                 num_items = random.randint(1, 5)
                 selected_products = random.sample(products, min(num_items, len(products)))
-                
+
                 for product in selected_products:
                     quantity = random.randint(1, 3)
-                    
+
                     InvoiceItem.objects.create(
                         invoice=invoice,
                         product=product,
@@ -400,40 +389,10 @@ class Command(BaseCommand):
                         discount=random.choice([0, 0, 0, 10, 20, 50]),
                         tax_rate=product.gst_rate,
                     )
-                
+
                 # Calculate totals
                 invoice.calculate_totals()
-                
-                # 90% invoices are fully paid
-                if random.random() < 0.9:
-                    invoice.paid_amount = invoice.total_amount
-                    invoice.payment_status = 'paid'
-                    invoice.save()
-                    
-                    Payment.objects.create(
-                        invoice=invoice,
-                        amount=invoice.total_amount,
-                        payment_method=payment_method,
-                        received_by=created_by,
-                    )
-                elif random.random() < 0.5:
-                    # Partial payment
-                    partial = invoice.total_amount * Decimal(str(random.uniform(0.3, 0.7)))
-                    invoice.paid_amount = partial
-                    invoice.payment_status = 'partial'
-                    invoice.save()
-                    
-                    Payment.objects.create(
-                        invoice=invoice,
-                        amount=partial,
-                        payment_method=payment_method,
-                        received_by=created_by,
-                    )
-                
+
                 invoices_created += 1
-        
+
         self.stdout.write(f'Created {invoices_created} invoices')
-        
-        # Update customer stats
-        for customer in customers:
-            customer.update_stats()

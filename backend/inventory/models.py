@@ -92,27 +92,19 @@ class Product(models.Model):
     tally_name = models.CharField(max_length=150, blank=True, help_text='Tally product name for integration')
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
-    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
 
     # Pricing
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
-    mrp = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    
+
     # Stock
     current_stock = models.IntegerField(default=0)
     min_stock_level = models.IntegerField(default=10)
-    max_stock_level = models.IntegerField(default=1000)
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='pcs')
-    
+
     # Tax
     gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
     hsn_code = models.CharField(max_length=20, blank=True)
-    
-    # Media
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
-    
-    # Status
-    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
