@@ -74,7 +74,7 @@ const Billing = () => {
         { id: 4, project_name: 'RELAX CHAIR', created_by_name: 'BOT' },
         { id: 5, project_name: 'NIGHT TABLE', created_by_name: 'BOT' },
         { id: 6, project_name: 'LOW CABINET', created_by_name: 'BOT' },
-        { id: 7, project_name: 'MNZ POUF WITH TRAY', created_by_name: 'Aditi marchanda' },
+        { id: 7, project_name: 'MNZ POUF WITH TRAY', created_by_name: 'Aditi Manchanda' },
         { id: 8, project_name: 'BASTIEN BED SIDE NIGHT TABLE', created_by_name: 'Rajender Kumar' },
       ];
       

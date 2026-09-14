@@ -355,7 +355,7 @@ class Command(BaseCommand):
                 project_created_by = ''
                 if department:
                     project_name = random.choice(['NELSON BED', 'Harper Sofa (Fabric2)', 'NOVA BOOKSHELF', 'RELAX CHAIR', 'NIGHT TABLE', 'LOW CABINET', 'MNZ POUF WITH TRAY', 'BASTIEN BED SIDE NIGHT TABLE'])
-                    project_created_by = random.choice(['Nishant Singh', 'Aditi Marchanda', 'Rajender Kumar', 'Bot'])
+                    project_created_by = random.choice(['Nishant Singh', 'Aditi Manchanda', 'Rajender Kumar', 'Bot'])
 
                 invoice = Invoice.objects.create(
                     department=department,
