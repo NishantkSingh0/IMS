@@ -314,17 +314,38 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-white/50 mb-2 tracking-wide uppercase">
-                  Email address
+                  User ID
                 </label>
+
                 <div className="relative">
-                  <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 w-4 h-4" />
+                  <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35 w-4 h-4 z-10" />
+
+                  {/* Ghost suggestion */}
+                  {email && !email.includes('@') && (
+                    <div
+                      className="absolute left-10 right-4 top-1/2 -translate-y-1/2
+                                pointer-events-none text-sm whitespace-pre"
+                    >
+                      <span className="invisible">{email}</span>
+                      <span className="text-white/20">@oaknore.in</span>
+                    </div>
+                  )}
+
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="hp-input w-full pl-10 pr-4 py-3 text-sm"
-                    placeholder={loginType === 'owner' ? 'owner@oaknore.in' : 'manager@oaknore.in'}
+                    onBlur={(e) => {
+                      const value = e.target.value.trim();
+
+                      if (value && !value.includes('@')) {
+                        setEmail(`${value}@oaknore.in`);
+                      }
+                    }}
+                    className="hp-input relative w-full pl-10 pr-4 py-3 text-sm"
+                    placeholder="admin"
                     required
+                    autoComplete="username"
                   />
                 </div>
               </div>
