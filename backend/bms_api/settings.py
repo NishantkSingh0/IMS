@@ -22,9 +22,9 @@ DEBUG = config('DEBUG', default='False', cast=bool)
 
 # Additional security settings for production
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default='False', cast=bool)
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default='True', cast=bool)
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default='True', cast=bool)
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
