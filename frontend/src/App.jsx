@@ -18,8 +18,8 @@ const Invoices = lazy(() => import('./pages/Invoices'));
 
 // Loading component for Suspense
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
   </div>
 );
 
