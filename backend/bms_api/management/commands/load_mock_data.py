@@ -807,7 +807,7 @@ class Command(BaseCommand):
             {'name': 'Pen Brush (Kalam Brush) #11', 'tally_name': '', 'category': 'POLISHING', 'cost_price': 25, 'stock': 10, 'unit': 'PCS', 'gst_rate': 18, 'hsn_code': ''},
             {'name': 'Pen Brush (Kalam Brush) #12', 'tally_name': '', 'category': 'POLISHING', 'cost_price': 25, 'stock': 10, 'unit': 'PCS', 'gst_rate': 18, 'hsn_code': ''},
             {'name': 'Strech Fil 12"', 'tally_name': 'Stretch Film 12 inch', 'category': 'PACKAGING', 'cost_price': 215, 'stock': 14, 'unit': 'KG', 'gst_rate': 18, 'hsn_code': ''},
-            {'name': 'Adapter F-Shoe Double Milkey (Surie Polex)', 'tally_name': '', 'category': 'STONE/SLABS', 'cost_price': None, 'stock': 14, 'unit': 'KG', 'gst_rate': 18, 'hsn_code': ''},
+            # {'name': 'Adapter F-Shoe Double Milkey (Surie Polex)', 'tally_name': '', 'category': 'STONE/SLABS', 'cost_price': None, 'stock': 14, 'unit': 'KG', 'gst_rate': 18, 'hsn_code': ''},
             {'name': 'Fickert Dr1Frs #P36 (Surie Polex)', 'tally_name': '', 'category': 'STONE/SLABS', 'cost_price': 118, 'stock': 2, 'unit': 'PCS', 'gst_rate': 18, 'hsn_code': ''},
             {'name': 'Fickert Dr1Frs #P60 (Surie Polex)', 'tally_name': '', 'category': 'STONE/SLABS', 'cost_price': 118, 'stock': 2, 'unit': 'PCS', 'gst_rate': 18, 'hsn_code': ''},
             {'name': 'Fickert Dr1Frs #P100 (Surie Polex)', 'tally_name': '', 'category': 'STONE/SLABS', 'cost_price': 236, 'stock': 4, 'unit': 'PCS', 'gst_rate': 18, 'hsn_code': ''},
