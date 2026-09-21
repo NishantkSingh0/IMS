@@ -1,26 +1,7 @@
 import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import {
-  FiPackage,
-  FiAlertTriangle,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiLayers,
-  FiDollarSign,
-} from 'react-icons/fi';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { FiPackage, FiAlertTriangle, FiTrendingUp, FiTrendingDown, FiLayers, FiDollarSign } from 'react-icons/fi';
 
 const Inventory = () => {
   const [loading, setLoading] = useState(true);

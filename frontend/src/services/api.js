@@ -135,7 +135,8 @@ export default api;
 
 // Auth API
 export const authAPI = {
-  login: (email, password) => api.post('/staff/token/', { email, password }),
+  login: (email, password) => api.post('/staff/token', { email, password }),
+  logout: (refreshToken) => api.post('/staff/logout', { refresh: refreshToken }),
   refreshToken: (refresh) => api.post('/token/refresh/', { refresh }),
   getProfile: () => api.get('/staff/users/me/'),
   changePassword: (data) => api.post('/staff/users/change_password/', data),

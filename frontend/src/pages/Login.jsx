@@ -21,23 +21,23 @@ const MODULES = [
   { code: 'M-01', name: 'Billing & POS', desc: 'Build an invoice in seconds, apply GST and discounts automatically, then print or download as PDF.',           icon: FiShoppingCart },
   { code: 'M-02', name: 'Inventory Control', desc: 'Watch stock levels in real time, set reorder points, and get warned before an item runs out.',                  icon: FiPackage },
   { code: 'M-03', name: 'Customer Records', desc: 'Keep purchase history and outstanding balances against every customer, automatically.',                         icon: FiUsers },
-  { code: 'M-04', name: 'Analytics & Reporting', desc: 'Revenue, profit, and category-wise sales — broken down without building a spreadsheet.',                        icon: FiBarChart2 },
+  { code: 'M-04', name: 'Analytics & Reporting', desc: 'Revenue, profit, and category-wise sales, broken down without building a spreadsheet.',                        icon: FiBarChart2 },
   { code: 'M-05', name: 'Staff & Roles', desc: 'Give each person only the access their role needs, and see who did what, and when.',                            icon: FiUser },
   { code: 'M-06', name: 'Department Transfers', desc: 'Move stock between departments and keep a clean, searchable audit trail as it happens.',                         icon: FiRepeat },
 ]; 
 
 const WORKFLOW = [
-  { n: '01', title: 'Stock in',    desc: 'Receive goods, log supplier and quantity — the count updates the moment you save.',                 icon: FiTruck },
+  { n: '01', title: 'Stock in',    desc: 'Receive goods, log supplier and quantity, the count updates the moment you save.',                 icon: FiTruck },
   { n: '02', title: 'Bill & sell', desc: 'Ring up a sale, apply tax and discount, hand over a printed or digital invoice.',                   icon: FiPrinter },
-  { n: '03', title: 'Track',       desc: 'Every unit and rupee is logged the moment it moves — nothing waits for a nightly sync.',            icon: FiZap },
+  { n: '03', title: 'Track',       desc: 'Every unit and rupee is logged the moment it moves, nothing waits for a nightly sync.',            icon: FiZap },
   { n: '04', title: 'Reconcile',   desc: 'Close the day against a report that already matches what\'s on the shelf.',                         icon: FiCheckCircle },
 ];
 
 const TRUST = [
-  { title: 'Role-based access',      desc: 'Every login is scoped by JWT authentication — staff only reach what their role permits.',      icon: FiShield },
+  { title: 'Role-based access',      desc: 'Every login is scoped by JWT authentication, staff only reach what their role permits.',      icon: FiShield },
   { title: 'A record that holds up', desc: 'Built on PostgreSQL so stock and sales history stay consistent even under load.',               icon: FiDatabase },
   { title: 'Reports you can hand over', desc: 'Export to CSV, PDF, or Excel for accountants, auditors, or your own records.',              icon: FiFileText },
-  { title: 'Runs on your terms',     desc: 'Deploy on your own infrastructure or ours — the data stays yours either way.',                 icon: FiLock },
+  { title: 'Runs on your terms',     desc: 'Deploy on your own infrastructure or ours, the data stays yours either way.',                 icon: FiLock },
 ];
 
 const MANAGER_DUTIES = [
@@ -86,7 +86,7 @@ const AnimStyles = () => (
     }
     .hp-visible .hp-el-left { opacity: 1; transform: translateX(0); }
 
-    /* fade-up for hero (no observer needed — always visible) */
+    /* fade-up for hero (no observer needed, always visible) */
     @keyframes heroUp {
       from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -235,7 +235,7 @@ const Login = () => {
       <div className="min-h-screen flex bg-black">
         <AnimStyles />
 
-        {/* Left — branding panel */}
+        {/* Left, branding panel */}
         <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-white text-black">
           {/* subtle grid bg */}
           <div
@@ -288,7 +288,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right — form panel */}
+        {/* Right, form panel */}
         <div className="w-full lg:w-[48%] flex items-center justify-center p-8 lg:p-14">
           <div className="w-full max-w-[400px]">
             <button
@@ -490,7 +490,7 @@ const Login = () => {
 
           {/* Sub */}
           <p className="hero-anim-3 mt-8 text-xl sm:text-2xl text-white/50 max-w-2xl leading-relaxed font-light">
-            One platform for inventory, billing, staff, and analytics —
+            One platform for inventory, billing, staff, and analytics,
             a dashboard built for the counter and another for the boardroom.
           </p>
 
@@ -755,7 +755,7 @@ const Login = () => {
           <div className="max-w-7xl mx-auto px-6 sm:px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <span className="font-mono text-xs text-white/30 tracking-widest uppercase">
-                IMS — Inventory Management System
+                IMS, Inventory Management System
               </span>
             </div>
             <p className="text-xs text-white/25 font-mono">© 2026 OAKnORE. All rights reserved.</p>

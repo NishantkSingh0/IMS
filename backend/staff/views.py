@@ -1,7 +1,9 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -204,3 +206,47 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
         logs = self.queryset.filter(user=request.user)[:50]
         serializer = self.get_serializer(logs, many=True)
         return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    """
+    Logout endpoint that blacklists the refresh token.
+    This ensures the token cannot be used again after logout.
+    """
+    try:
+        refresh_token = request.data.get('refresh')
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception as blacklist_error:
+                # Log the error but don't fail the logout
+                print(f"Token blacklisting failed: {blacklist_error}")
+                # Continue with logout even if blacklisting fails
+        
+        # Log the logout activity
+        try:
+            ActivityLog.objects.create(
+                user=request.user,
+                action='logout',
+                model_name='User',
+                object_id=request.user.id,
+                description=f'User {request.user.email} logged out',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+        except Exception as log_error:
+            # Don't fail logout if activity logging fails
+            print(f"Activity logging failed: {log_error}")
+        
+        return Response(
+            {'message': 'Successfully logged out'},
+            status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Logout failed: {str(e)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
