@@ -8,8 +8,15 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 import random
 from decimal import Decimal
+from decouple import AutoConfig
+from pathlib import Path
+import os
 
 User = get_user_model()
+
+# Load environment variables from the backend directory
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+config = AutoConfig(search_path=BASE_DIR / 'backend')
 
 
 class Command(BaseCommand):
@@ -50,14 +57,19 @@ class Command(BaseCommand):
         self.stdout.write('Cleared all application caches')
 
     def create_users(self):
-        """Create demo users."""
+        """Create demo users with passwords from environment variables."""
         from staff.models import User
+        
+        # Fetch passwords from environment variables with fallback defaults
+        admin_pass = config('ADMIN_PASS', default='O$1234567890')
+        manager_pass = config('MANAGER_PASS', default='O$1234567890')
+        manager2_pass = config('MANAGER2_PASS', default='O$1234567890')
         
         users_data = [
             {
                 'email': 'admin@oaknore.in',
-                'password': 'O$1234567890',
-                'first_name': 'Rajesh',
+                'password': admin_pass,
+                'first_name': 'Rajender',
                 'last_name': 'Kumar',
                 'role': 'owner',
                 'phone': '9876543210',
@@ -66,7 +78,7 @@ class Command(BaseCommand):
             },
             {
                 'email': 'harvansh@oaknore.in',
-                'password': 'O$1234567890',
+                'password': manager_pass,
                 'first_name': 'Harvansh',
                 'last_name': 'Kumar',
                 'role': 'manager',
@@ -74,7 +86,7 @@ class Command(BaseCommand):
             },
             {
                 'email': 'inventory@oaknore.in',
-                'password': 'O$1234567890',
+                'password': manager2_pass,
                 'first_name': 'Inventory',
                 'last_name': 'Null',
                 'role': 'cashier',          # worker || cashier || Manager

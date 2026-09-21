@@ -126,8 +126,8 @@ const Inventory = () => {
                   length2: 10,
                 }}
                 style={{
-                  fontSize: "12px",
-                  fontWeight: 500,
+                  fontSize: "7px",
+                  fontWeight: 300,
                 }}
               >
                 {categoryData.map((entry, index) => (
