@@ -24,7 +24,7 @@ class Command(BaseCommand):
         self.create_departments()
         self.create_products()
         self.create_customers()
-        self.create_invoices()
+        # self.create_invoices()
         
         # Clear all relevant caches to ensure fresh data
         self.clear_all_caches()
