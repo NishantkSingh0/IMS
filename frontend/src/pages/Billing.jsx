@@ -20,6 +20,7 @@ const Billing = () => {
   const [cart, setCart] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
   const searchInputRef = useRef(null);
@@ -324,6 +325,7 @@ const Billing = () => {
       setCart([]);
       setSelectedDepartment('');
       setSelectedProject('');
+      setProjectSearchQuery('');
       setDiscount(0);
       searchInputRef.current?.focus();
     } catch (error) {
@@ -340,6 +342,12 @@ const Billing = () => {
       maximumFractionDigits: 2,
     }).format(amount);
   };
+
+  const filteredProjects = projects
+    .filter((project) =>
+      project.project_name.toLowerCase().includes(projectSearchQuery.toLowerCase())
+    )
+    .slice(0, 5);
 
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-6">
@@ -487,19 +495,71 @@ const Billing = () => {
             Project
           </label>
           <div className="relative">
-            <FiFolder className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <select
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="">Select Project</option>
-              {projects.map((project) => (
-                <option key={project.id || project.project_name} value={project.project_name}>
-                  {project.project_name} {project.created_by_name ? `(by ${project.created_by_name})` : ''}
-                </option>
-              ))}
-            </select>
+            {projectSearchQuery && <FiFolder className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+            <input
+              type="text"
+              value={projectSearchQuery}
+              onChange={(e) => setProjectSearchQuery(e.target.value)}
+              placeholder="Search project..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:shadow-sm transition-shadow"
+            />
+            {projectSearchQuery && filteredProjects.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+                {filteredProjects.map((project) => (
+                  <button
+                    key={project.id || project.project_name}
+                    onClick={() => {
+                      setSelectedProject(project.project_name);
+                      setProjectSearchQuery('');
+                    }}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-gradient-to-r hover:from-primary-50 hover:to-blue-50 border-b last:border-b-0 transition-colors"
+                  >
+                    <div className="text-left flex items-center space-x-3">
+                      <div className="bg-gray-100 p-2 rounded-lg">
+                        <FiFolder className="w-4 h-4 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{project.project_name}</p>
+                        {project.created_by_name && (
+                          <p className="text-sm text-gray-500">by {project.created_by_name}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {projectSearchQuery && filteredProjects.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <div className="px-4 py-3 text-center text-gray-500 text-sm">
+                  No projects found matching "{projectSearchQuery}"
+                </div>
+              </div>
+            )}
+            {selectedProject && !projectSearchQuery && (
+              <div className="mt-3 flex items-center justify-between bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 px-4 py-3 rounded-lg shadow-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-primary-100 p-2 rounded-lg">
+                    <FiFolder className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{selectedProject}</p>
+                    {projects.find(p => p.project_name === selectedProject)?.created_by_name && (
+                      <p className="text-xs text-gray-500">
+                        by {projects.find(p => p.project_name === selectedProject)?.created_by_name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedProject('')}
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                  title="Clear selection"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
