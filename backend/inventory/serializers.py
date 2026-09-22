@@ -2,6 +2,17 @@ from rest_framework import serializers
 from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 
 
+class CaseInsensitiveChoiceField(serializers.ChoiceField):
+    """Choice field that normalizes input to lowercase before validation."""
+    
+    def to_internal_value(self, data):
+        if data is None:
+            return None
+        # Normalize to lowercase before validation
+        data = str(data).lower()
+        return super().to_internal_value(data)
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for Category model."""
 
@@ -116,6 +127,12 @@ class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
     stock_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    
+    # Override unit field to handle case-insensitive validation
+    unit = CaseInsensitiveChoiceField(
+        choices=Product.UNIT_CHOICES,
+        required=True
+    )
 
     class Meta:
         model = Product
