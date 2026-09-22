@@ -235,7 +235,7 @@ const Departments = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Department name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 ${editingDepartment ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               />
               <input
                 type="text"
@@ -244,7 +244,7 @@ const Departments = () => {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 placeholder="Department code"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 ${editingDepartment ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               />
               <textarea
                 value={formData.description}

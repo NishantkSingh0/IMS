@@ -159,7 +159,6 @@ export const inventoryAPI = {
   getProduct: (id) => api.get(`/inventory/products/${id}/`),
   createProduct: (data) => api.post('/inventory/products/', data),
   updateProduct: (id, data) => api.patch(`/inventory/products/${id}/`, data),
-  deleteProduct: (id) => api.delete(`/inventory/products/${id}/`),
   searchByBarcode: (barcode) => api.get('/inventory/products/search_barcode/', { params: { barcode } }),
   getLowStock: () => api.get('/inventory/products/low_stock/'),
   getOutOfStock: () => api.get('/inventory/products/out_of_stock/'),

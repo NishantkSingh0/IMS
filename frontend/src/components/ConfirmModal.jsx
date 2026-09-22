@@ -1,6 +1,6 @@
 import { FiAlertTriangle } from 'react-icons/fi';
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'danger' }) => {
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'danger', showCancel = true }) => {
   if (!isOpen) return null;
 
   const typeStyles = {
@@ -14,7 +14,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
     },
     info: {
       icon: 'text-blue-500',
-      button: 'bg-blue-600 hover:bg-blue-700',
+      button: 'bg-black hover:bg-gray-800',
     },
   };
 
@@ -33,12 +33,14 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
           </div>
         </div>
         <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-          >
-            {cancelText}
-          </button>
+          {showCancel && (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              {cancelText}
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className={`px-4 py-2 text-white rounded-lg ${styles.button}`}
