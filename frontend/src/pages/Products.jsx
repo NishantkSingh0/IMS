@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { FiSearch, FiPlus, FiEdit2, FiFilter, FiX, FiPackage } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiEdit2, FiFilter, FiX, FiPackage, FiDownload } from 'react-icons/fi';
 import ConfirmModal from '../components/ConfirmModal';
 
 const Products = () => {
@@ -165,6 +165,26 @@ const Products = () => {
     });
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const blob = await inventoryAPI.exportProductsExcel();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `products_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Products exported successfully');
+    } catch (error) {
+      toast.error('Failed to export products');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -195,26 +215,35 @@ const Products = () => {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => {
-            setConfirmModal({
-              isOpen: true,
-              onConfirm: () => {
-                resetForm();
-                setShowModal(true);
-                setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
-              },
-              title: 'Add New Product',
-              message: 'Are you sure you want to add a new product? If it already exists, please edit the existing product to avoid duplicates.',
-              type: 'info',
-              showCancel: true
-            });
-          }}
-          className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black transition"
-        >
-          <FiPlus className="w-5 h-5" />
-          <span>Add Product</span>
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          >
+            <FiDownload className="w-5 h-5" />
+            <span>Export Excel</span>
+          </button>
+          <button
+            onClick={() => {
+              setConfirmModal({
+                isOpen: true,
+                onConfirm: () => {
+                  resetForm();
+                  setShowModal(true);
+                  setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
+                },
+                title: 'Add New Product',
+                message: 'Are you sure you want to add a new product? If it already exists, please edit the existing product to avoid duplicates.',
+                type: 'info',
+                showCancel: true
+              });
+            }}
+            className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black transition"
+          >
+            <FiPlus className="w-5 h-5" />
+            <span>Add Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

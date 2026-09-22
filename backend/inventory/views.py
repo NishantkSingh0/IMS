@@ -8,6 +8,8 @@ from django.db.models import Sum, F
 from django.utils import timezone
 from django.conf import settings
 from django.core.cache import cache
+from django.http import HttpResponse
+import pandas as pd
 from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 from .serializers import (
     CategorySerializer, SupplierSerializer, SupplierListSerializer,
@@ -233,7 +235,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'adjust_stock']:
+        if self.action in ['create', 'update', 'partial_update', 'adjust_stock', 'export_excel']:
             return [IsOwnerOrManager()]
         return [IsAuthenticated()]
 
@@ -381,6 +383,53 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(ProductSerializer(product).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def export_excel(self, request):
+        """Export all products to Excel."""
+        # Get all products (no pagination, no filters - always show all)
+        products = self.queryset.select_related('category').all()
+
+        # Prepare data for Excel export
+        data = []
+        for product in products:
+            data.append({
+                'SKU': product.sku or '',
+                'Product ID': product.id,
+                'Product Name': product.name,
+                'Tally Name': product.tally_name or '',
+                'Category': product.category.name if product.category else '',
+                'Cost Price': float(product.cost_price) if product.cost_price else 0,
+                'Current Stock': product.current_stock,
+                'Unit': product.unit,
+                'Minimum Stock Level': product.min_stock_level,
+                'GST Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
+                'Total Stock Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
+                'Low Stock': 'Yes' if product.is_low_stock else 'No',
+                'Description': product.description or '',
+            })
+
+        # Create DataFrame
+        df = pd.DataFrame(data)
+
+        # Create Excel response
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="products_export.xlsx"'
+
+        # Write to Excel
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Products', index=False)
+
+            # Auto-adjust column widths
+            worksheet = writer.sheets['Products']
+            for idx, col in enumerate(df.columns, 1):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
+
+        return response
 
 
 class StockTransactionViewSet(viewsets.ReadOnlyModelViewSet):
