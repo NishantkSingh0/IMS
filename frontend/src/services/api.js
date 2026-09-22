@@ -46,21 +46,32 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_URL}/token/refresh/`, {
+          // Try using the staff token refresh endpoint first
+          const response = await axios.post(`${API_URL}/staff/token/refresh/`, {
             refresh: refreshToken,
           });
 
-          const { access } = response.data;
+          const { access, refresh: newRefreshToken } = response.data;
           localStorage.setItem('access_token', access);
+          
+          // Update refresh token if a new one is provided (rotation)
+          if (newRefreshToken) {
+            localStorage.setItem('refresh_token', newRefreshToken);
+          }
 
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
         }
       } catch (refreshError) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        toast.error('Session expired. Please login again.');
-        window.location.href = '/login';
+        console.error('Token refresh failed:', refreshError);
+        
+        // Only logout if refresh token is invalid/expired
+        if (refreshError.response?.status === 401 || refreshError.response?.status === 400) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          toast.error('Session expired. Please login again.');
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

@@ -67,9 +67,14 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             refresh['role'] = authenticated_user.role
             refresh['full_name'] = authenticated_user.get_full_name()
             
+            access_token = refresh.access_token
+            access_token['email'] = authenticated_user.email
+            access_token['role'] = authenticated_user.role
+            access_token['full_name'] = authenticated_user.get_full_name()
+            
             return {
                 'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'access': str(access_token),
                 'user': {
                     'id': authenticated_user.id,
                     'email': authenticated_user.email,
