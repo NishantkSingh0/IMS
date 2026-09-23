@@ -6,12 +6,14 @@ from inventory.models import Department, Product, StockTransaction
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
     """Serializer for InvoiceItem model."""
-    
+
+    unit = serializers.CharField(source='product.unit', read_only=True)
+
     class Meta:
         model = InvoiceItem
         fields = [
             'id', 'product', 'product_name', 'product_sku',
-            'quantity', 'unit_price', 'discount', 'tax_rate',
+            'quantity', 'unit', 'unit_price', 'discount', 'tax_rate',
             'tax_amount', 'total'
         ]
         read_only_fields = ['tax_amount', 'total']

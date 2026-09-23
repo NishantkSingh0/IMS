@@ -467,7 +467,9 @@ const Invoices = () => {
                           <p className="font-medium text-gray-900">{item.product_name}</p>
                           <p className="text-sm text-gray-500">{item.product_sku}</p>
                         </td>
-                        <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
+                        <td className="px-4 py-3 text-center text-gray-600">
+                          {item.quantity} {item.unit || ''}
+                        </td>
                         <td className="px-4 py-3 text-right text-gray-600">
                           {formatCurrency(item.unit_price)}
                         </td>
