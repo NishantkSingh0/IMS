@@ -9,8 +9,8 @@ class Invoice(models.Model):
 
     invoice_number = models.CharField(max_length=50, unique=True)
     department = models.ForeignKey('inventory.Department', on_delete=models.PROTECT, null=True, blank=True, related_name='invoices')
-    project_name = models.CharField(max_length=200, blank=True)
-    project_created_by = models.CharField(max_length=200, blank=True)
+    project_name = models.CharField(max_length=200, blank=True, default='')
+    project_created_by = models.CharField(max_length=200, blank=True, default='')
 
     # Amounts
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)

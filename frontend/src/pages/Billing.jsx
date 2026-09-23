@@ -263,6 +263,19 @@ const Billing = () => {
     setCart(cart.filter((item) => item.product.id !== productId));
   };
 
+  const areAllItemsConsumable = () => {
+    if (cart.length === 0) return false;
+    return cart.every(item => item.product.category_name === 'CONSUMABLE');
+  };
+
+  const hasNonConsumableItems = () => {
+    return cart.some(item => item.product.category_name !== 'CONSUMABLE');
+  };
+
+  const hasAnyConsumableItems = () => {
+    return cart.some(item => item.product.category_name === 'CONSUMABLE');
+  };
+
   const calculateSubtotal = () => {
     return cart.reduce(
       (sum, item) => sum + item.product.cost_price * item.quantity - item.discount,
@@ -295,20 +308,31 @@ const Billing = () => {
       return;
     }
 
-    if (!selectedProject) {
+    // Check if project selection is mandatory (has non-consumable items)
+    if (hasNonConsumableItems() && !selectedProject) {
       toast.error('Please select a project');
       return;
     }
 
     setLoading(true);
     try {
-      // Find the selected project to get created_by_name
-      const project = projects.find(p => p.project_name === selectedProject || p.id === selectedProject);
+      let projectName, projectCreatedBy;
+
+      // If all items are consumable, use default values
+      if (areAllItemsConsumable()) {
+        projectName = 'CONSUMABLE PRODUCT';
+        projectCreatedBy = '-';
+      } else {
+        // Find the selected project to get created_by_name
+        const project = projects.find(p => p.project_name === selectedProject || p.id === selectedProject);
+        projectName = project?.project_name || selectedProject;
+        projectCreatedBy = project?.created_by_name || '';
+      }
       
       const invoiceData = {
         department_id: parseInt(selectedDepartment),
-        project_name: project?.project_name || selectedProject,
-        project_created_by: project?.created_by_name || '',
+        project_name: projectName,
+        project_created_by: projectCreatedBy,
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
@@ -377,6 +401,11 @@ const Billing = () => {
                     <div className="text-left">
                       <p className="font-medium text-gray-900">{product.name}</p>
                       <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+                      {product.category_name === 'CONSUMABLE' && (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                          Consumable
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
@@ -417,6 +446,11 @@ const Billing = () => {
                     <td className="py-3">
                       <p className="font-medium text-gray-900">{item.product.name}</p>
                       <p className="text-sm text-gray-500">{item.product.sku}</p>
+                      {item.product.category_name === 'CONSUMABLE' && (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                          Consumable
+                        </span>
+                      )}
                     </td>
                     <td className="py-3">
                       <div className="flex items-center justify-center space-x-2">
@@ -462,6 +496,13 @@ const Billing = () => {
               </tbody>
             </table>
           )}
+          {hasAnyConsumableItems() && hasNonConsumableItems() && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-500 rounded-lg">
+              <p className="text-sm text-red-500 text-center">
+                Cart cannot mix Consumable and Non-Consumable items together. To Ensure Accurate Billing
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -492,7 +533,7 @@ const Billing = () => {
         {/* Project Selection */}
         <div className="p-4 border-b">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Project
+            Project {hasNonConsumableItems() && <span className="text-red-500">*</span>}
           </label>
           <div className="relative">
             {projectSearchQuery && <FiFolder className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
@@ -501,9 +542,14 @@ const Billing = () => {
               value={projectSearchQuery}
               onChange={(e) => setProjectSearchQuery(e.target.value)}
               placeholder="Search project..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:shadow-sm transition-shadow"
+              disabled={areAllItemsConsumable()}
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:shadow-sm transition-shadow ${
+                areAllItemsConsumable() 
+                  ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' 
+                  : 'border-gray-300'
+              }`}
             />
-            {projectSearchQuery && filteredProjects.length > 0 && (
+            {projectSearchQuery && filteredProjects.length > 0 && !areAllItemsConsumable() && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
                 {filteredProjects.map((project) => (
                   <button
@@ -529,14 +575,14 @@ const Billing = () => {
                 ))}
               </div>
             )}
-            {projectSearchQuery && filteredProjects.length === 0 && (
+            {projectSearchQuery && filteredProjects.length === 0 && !areAllItemsConsumable() && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                 <div className="px-4 py-3 text-center text-gray-500 text-sm">
                   No projects found matching "{projectSearchQuery}"
                 </div>
               </div>
             )}
-            {selectedProject && !projectSearchQuery && (
+            {selectedProject && !projectSearchQuery && !areAllItemsConsumable() && (
               <div className="mt-3 flex items-center justify-between bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 px-4 py-3 rounded-lg shadow-sm">
                 <div className="flex items-center space-x-3">
                   <div className="bg-primary-100 p-2 rounded-lg">
@@ -558,6 +604,18 @@ const Billing = () => {
                 >
                   <FiTrash2 className="w-4 h-4" />
                 </button>
+              </div>
+            )}
+            {areAllItemsConsumable() && cart.length > 0 && (
+              <div className="mt-3 flex items-center justify-between bg-gray-50 border border-gray-200 px-4 py-3 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gray-100 p-2 rounded-lg">
+                    <FiFolder className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-500">CONSUMABLE PRODUCT</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -608,7 +666,7 @@ const Billing = () => {
           </p>
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || !selectedDepartment || !selectedProject || loading}
+            disabled={cart.length === 0 || !selectedDepartment || (hasNonConsumableItems() && !selectedProject) || (hasAnyConsumableItems() && hasNonConsumableItems()) || loading}
             className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FiShoppingCart className="w-5 h-5" />

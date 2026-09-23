@@ -101,7 +101,7 @@ class InvoiceCreateSerializer(serializers.Serializer):
     """Serializer for creating a new invoice."""
 
     department_id = serializers.IntegerField()
-    project_name = serializers.CharField(required=True)
+    project_name = serializers.CharField(required=False, allow_blank=True, max_length=200)
     project_created_by = serializers.CharField(required=False, allow_blank=True, max_length=200)
     items = InvoiceItemCreateSerializer(many=True)
     discount_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, default=0, min_value=0, max_value=100)
@@ -120,19 +120,17 @@ class InvoiceCreateSerializer(serializers.Serializer):
         return value
 
     def validate_project_name(self, value):
-        if not value or not value.strip():
-            raise serializers.ValidationError("Project name is required")
-        if len(value) > 200:
+        if value and len(value) > 200:
             raise serializers.ValidationError("Project name cannot exceed 200 characters")
-        return value.strip()
+        return value.strip() if value else ''
     
     @transaction.atomic
     def create(self, validated_data):
         user = self.context['request'].user
         items_data = validated_data.pop('items')
         department_id = validated_data.pop('department_id')
-        project_name = validated_data.pop('project_name')
-        project_created_by = validated_data.pop('project_created_by', '')
+        project_name = validated_data.pop('project_name', 'CONSUMABLE PRODUCT')
+        project_created_by = validated_data.pop('project_created_by', '-')
 
         # Create invoice
         invoice = Invoice.objects.create(
