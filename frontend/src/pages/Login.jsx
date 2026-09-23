@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
-  FiLock, FiMail, FiArrowLeft, FiCheckCircle, FiClock, FiShield, FiZap,
+  FiLock, FiMail, FiCheckCircle, FiClock, FiShield, FiZap,
   FiPackage, FiShoppingCart, FiBarChart2, FiUsers, FiFileText, FiRepeat,
-  FiTruck, FiPrinter, FiDatabase, FiUser, FiArrowRight, FiChevronDown,
+  FiTruck, FiPrinter, FiDatabase, FiUser, FiArrowRight, FiArrowLeft, FiChevronDown,
 } from 'react-icons/fi';
 
 // ─── Static data ────────────────────────────────────────────────────────────
 
 const METRICS = [
-  { value: '50+', label: 'Products tracked' },
+  { value: '1000+', label: 'Products tracked' },
   { value: '100+', label: 'Invoices generated' },
-  { value: '15+', label: 'Customers on record' },
+  { value: '5+', label: 'Active users' },
   { value: '3 mo', label: 'Sales history modelled' },
 ];
 
@@ -24,7 +24,7 @@ const MODULES = [
   { code: 'M-04', name: 'Analytics & Reporting', desc: 'Revenue, profit, and category-wise sales, broken down without building a spreadsheet.',                        icon: FiBarChart2 },
   { code: 'M-05', name: 'Staff & Roles', desc: 'Give each person only the access their role needs, and see who did what, and when.',                            icon: FiUser },
   { code: 'M-06', name: 'Department Transfers', desc: 'Move stock between departments and keep a clean, searchable audit trail as it happens.',                         icon: FiRepeat },
-]; 
+];
 
 const WORKFLOW = [
   { n: '01', title: 'Stock in',    desc: 'Receive goods, log supplier and quantity, the count updates the moment you save.',                 icon: FiTruck },
@@ -189,14 +189,14 @@ function useScrollReveal(deps = []) {
 // ─── Login component ─────────────────────────────────────────────────────────
 
 const Login = () => {
-  const [loginType, setLoginType]   = useState(null); // null | 'owner' | 'manager'
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
   const [loading, setLoading]       = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const { login }                   = useAuth();
   const navigate                    = useNavigate();
-  const addRef                      = useScrollReveal([loginType]);
+  const addRef                      = useScrollReveal([]);
 
   // Navbar shadow on scroll
   useEffect(() => {
@@ -211,8 +211,27 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        toast.success(`Welcome to the ${loginType === 'owner' ? 'Owner' : 'Manager'} dashboard`);
-        navigate('/');
+        const userRole = result.user.role;
+        let welcomeMessage = `Welcome back, ${result.user.full_name || result.user.email}!`;
+        let redirectPath = '/';
+
+        // Role-based routing and messages
+        if (userRole === 'owner') {
+          welcomeMessage = `Welcome back, Owner!`;
+          redirectPath = '/analytics';
+        } else if (userRole === 'manager') {
+          welcomeMessage = `Welcome back, Manager!`;
+          redirectPath = '/';
+        } else if (userRole === 'cashier') {
+          welcomeMessage = `Welcome back, Cashier!`;
+          redirectPath = '/billing';
+        } else if (userRole === 'worker') {
+          welcomeMessage = `Welcome back, Worker!`;
+          redirectPath = '/inventory';
+        }
+
+        toast.success(welcomeMessage);
+        navigate(redirectPath);
       } else {
         toast.error(result.error);
       }
@@ -223,14 +242,8 @@ const Login = () => {
     }
   };
 
-  const handleBack = () => {
-    setLoginType(null);
-    setEmail('');
-    setPassword('');
-  };
-
-  // ── Login form (shown after role selection) ────────────────────────────────
-  if (loginType) {
+  // ── Login form (shown when user clicks login) ────────────────────────────────
+  if (showLoginForm) {
     return (
       <div className="min-h-screen flex bg-black">
         <AnimStyles />
@@ -256,17 +269,15 @@ const Login = () => {
             {/* center */}
             <div>
               <h1 className="text-5xl font-bold tracking-tight leading-[1.06] mb-5">
-                {loginType === 'owner' ? 'Owner\ndashboard.' : 'Manager\ndashboard.'}
+                Dashboard<br />login.
               </h1>
               <p className="text-black/55 text-lg leading-relaxed max-w-sm">
-                {loginType === 'owner'
-                  ? 'Read the numbers, manage staff, and set the rules the rest of the store runs on.'
-                  : 'Bill, stock, and serve customers without breaking your stride.'}
+                One unified login system that automatically routes you to the appropriate dashboard based on your role.
               </p>
               <div className="mt-12 grid grid-cols-2 gap-6">
                 {[
                   { icon: FiZap,         title: 'Fast',     desc: 'Built for the counter' },
-                  { icon: FiShield,      title: 'Secure',   desc: 'Role-based JWT access' },
+                  { icon: FiShield,      title: 'Secure',   desc: 'Built to Secure' },
                   { icon: FiClock,       title: '24 / 7',   desc: 'Always available' },
                   { icon: FiCheckCircle, title: 'Reliable', desc: 'Consistent records' },
                 ].map((f) => (
@@ -292,22 +303,20 @@ const Login = () => {
         <div className="w-full lg:w-[48%] flex items-center justify-center p-8 lg:p-14">
           <div className="w-full max-w-[400px]">
             <button
-              onClick={handleBack}
+              onClick={() => setShowLoginForm(false)}
               className="flex items-center gap-1.5 text-white/40 hover:text-white mb-10 transition-colors text-sm"
             >
               <FiArrowLeft className="w-4 h-4" />
-              Back
+              Back to home
             </button>
 
             <div className="mb-9">
               <p className="font-mono text-xs text-white/35 tracking-widest uppercase mb-3">
-                {loginType === 'owner' ? 'Owner access' : 'Manager access'}
+                Secure access
               </p>
               <h2 className="text-3xl font-bold text-white tracking-tight">Sign in</h2>
               <p className="text-white/45 mt-2 text-sm">
-                {loginType === 'owner'
-                  ? 'Access business analytics and controls.'
-                  : 'Access store operations and billing.'}
+                Enter your credentials to access your dashboard.
               </p>
             </div>
 
@@ -361,7 +370,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="hp-input w-full pl-10 pr-4 py-3 text-sm"
-                    placeholder="••••••••••"
+                    placeholder="•••••••••••"
                     required
                   />
                 </div>
@@ -394,17 +403,8 @@ const Login = () => {
                 Demo credentials
               </p>
               <div className="space-y-1 font-mono text-xs text-white/40">
-                {loginType === 'owner' ? (
-                  <>
-                    <p>admin@oaknore.in</p>
-                    <p>O$1234567890</p>
-                  </>
-                ) : (
-                  <>
-                    <p>harvansh@oaknore.in</p>
-                    <p>O$1234567890</p>
-                  </>
-                )}
+                <p>admin@oaknore.in</p>
+                <p>O$1234567890</p>
               </div>
             </div> */}
           </div>
@@ -437,16 +437,10 @@ const Login = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLoginType('manager')}
-              className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-            >
-              Manager
-            </button>
-            <button
-              onClick={() => setLoginType('owner')}
+              onClick={() => setShowLoginForm(true)}
               className="px-5 py-2 bg-white text-black text-sm font-bold rounded-lg hover:bg-white/90 active:scale-95 transition-all"
             >
-              Owner login
+              Login
             </button>
           </div>
         </div>
@@ -497,19 +491,12 @@ const Login = () => {
           {/* CTAs */}
           <div className="hero-anim-4 mt-12 flex flex-col sm:flex-row gap-4">
             <button
-              onClick={() => setLoginType('owner')}
+              onClick={() => setShowLoginForm(true)}
               className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-black text-base font-bold
                          rounded-xl hover:bg-white/90 active:scale-[0.97] transition-all"
             >
-              Owner dashboard
+              Get Started
               <FiArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-            <button
-              onClick={() => setLoginType('manager')}
-              className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white text-base font-semibold
-                         rounded-xl hover:border-white/50 hover:bg-white/5 active:scale-[0.97] transition-all"
-            >
-              Manager dashboard
             </button>
           </div>
 
@@ -620,10 +607,10 @@ const Login = () => {
                   ))}
                 </ul>
                 <button
-                  onClick={() => setLoginType('manager')}
+                  onClick={() => setShowLoginForm(true)}
                   className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-white/60 hover:text-white transition-colors group/btn"
                 >
-                  Manager login
+                  Login
                   <FiArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </div>
@@ -644,10 +631,10 @@ const Login = () => {
                   ))}
                 </ul>
                 <button
-                  onClick={() => setLoginType('owner')}
+                  onClick={() => setShowLoginForm(true)}
                   className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 transition-colors group/btn"
                 >
-                  Owner login
+                  Login
                   <FiArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </div>
@@ -727,24 +714,16 @@ const Login = () => {
           <div className="hp-el hp-s1 text-center max-w-4xl mx-auto">
             <p className="font-mono text-xs text-white/35 tracking-widest uppercase mb-6">Get started</p>
             <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-10">
-              Choose a dashboard<br /><span className="text-white/30">to continue.</span>
+              Ready to transform<br /><span className="text-white/30">your business?</span>
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => setLoginType('owner')}
+                onClick={() => setShowLoginForm(true)}
                 className="group inline-flex items-center justify-center gap-2 px-9 py-4 bg-white text-black
                            text-base font-bold rounded-xl hover:bg-white/90 active:scale-[0.97] transition-all"
               >
-                Owner dashboard
+                Login Now
                 <FiArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => setLoginType('manager')}
-                className="inline-flex items-center justify-center gap-2 px-9 py-4 border border-white/20
-                           text-white text-base font-semibold rounded-xl hover:border-white/50
-                           hover:bg-white/5 active:scale-[0.97] transition-all"
-              >
-                Manager dashboard
               </button>
             </div>
           </div>

@@ -36,15 +36,20 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authAPI.login(email, password);
-      const { access, refresh } = response.data;
-      
+      const { access, refresh, user } = response.data;
+
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
-      
-      const profileResponse = await authAPI.getProfile();
-      setUser(profileResponse.data);
-      
-      return { success: true, user: profileResponse.data };
+
+      // Use the user data from the login response if available, otherwise fetch profile
+      if (user) {
+        setUser(user);
+        return { success: true, user };
+      } else {
+        const profileResponse = await authAPI.getProfile();
+        setUser(profileResponse.data);
+        return { success: true, user: profileResponse.data };
+      }
     } catch (error) {
       const message = error.response?.data?.detail || error.message || 'Login failed';
       return { success: false, error: message };

@@ -2,18 +2,7 @@ import { useState, useEffect } from 'react';
 import { staffAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import {
-  FiUsers,
-  FiUserCheck,
-  FiUserX,
-  FiShield,
-  FiPlus,
-  FiEdit2,
-  FiTrash2,
-  FiX,
-  FiSearch,
-  FiClock,
-} from 'react-icons/fi';
+import { FiUsers, FiUserCheck, FiUserX, FiShield, FiPlus, FiEdit2, FiTrash2, FiX, FiSearch, FiClock } from 'react-icons/fi';
 import ConfirmModal from '../components/ConfirmModal';
 
 const Staff = () => {
@@ -184,7 +173,7 @@ const Staff = () => {
           icon={FiUserX}
           color="red"
         />
-        <StatCard title="Roles" value={2} icon={FiShield} color="purple" />
+        <StatCard title="Active Roles" value={2} icon={FiShield} color="purple" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
