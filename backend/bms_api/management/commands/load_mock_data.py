@@ -89,7 +89,7 @@ class Command(BaseCommand):
                 'password': manager2_pass,
                 'first_name': 'Inventory',
                 'last_name': 'Null',
-                'role': 'cashier',          # worker || cashier || Manager
+                'role': 'manager',          # worker || cashier || Manager
                 'phone': '9876543212',
             },
         ]

@@ -283,19 +283,21 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
-        """Get all low stock products."""
+        """Get all low stock products (excluding out of stock)."""
         products = self.queryset.filter(
-            current_stock__lte=F('min_stock_level')
+            current_stock__lte=F('min_stock_level'),
+            current_stock__gt=0  # Exclude items with zero stock
         )
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='low_stock/export_excel')
     def low_stock_export_excel(self, request):
-        """Export low stock products to Excel."""
-        # Get low stock products
+        """Export low stock products to Excel (excluding out of stock)."""
+        # Get low stock products (excluding out of stock)
         products = self.queryset.filter(
-            current_stock__lte=F('min_stock_level')
+            current_stock__lte=F('min_stock_level'),
+            current_stock__gt=0  # Exclude items with zero stock
         ).select_related('category')
 
         # Prepare data for Excel export
@@ -404,7 +406,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         stats = {
             'total_products': Product.objects.count(),
-            'low_stock_count': queryset.filter(current_stock__lte=F('min_stock_level')).count(),
+            'low_stock_count': queryset.filter(
+                current_stock__lte=F('min_stock_level'),
+                current_stock__gt=0  # Exclude out of stock from low stock count
+            ).count(),
             'out_of_stock_count': queryset.filter(current_stock=0).count(),
             'total_stock_value': queryset.aggregate(
                 total=Sum(F('current_stock') * F('cost_price'))
