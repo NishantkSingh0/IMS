@@ -185,6 +185,34 @@ export const inventoryAPI = {
       return response.blob();
     });
   },
+  exportLowStockExcel: () => {
+    const token = localStorage.getItem('access_token');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    return fetch(`${API_URL}/inventory/products/low_stock/export_excel/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to export low stock products');
+      }
+      return response.blob();
+    });
+  },
+  exportOutOfStockExcel: () => {
+    const token = localStorage.getItem('access_token');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    return fetch(`${API_URL}/inventory/products/out_of_stock/export_excel/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to export out of stock products');
+      }
+      return response.blob();
+    });
+  },
   getLowStock: () => api.get('/inventory/products/low_stock/'),
   getOutOfStock: () => api.get('/inventory/products/out_of_stock/'),
   getStats: () => api.get('/inventory/products/stats/'),

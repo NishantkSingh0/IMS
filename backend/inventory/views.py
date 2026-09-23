@@ -235,7 +235,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'adjust_stock', 'export_excel']:
+        if self.action in ['create', 'update', 'partial_update', 'adjust_stock', 'export_excel', 'low_stock_export_excel', 'out_of_stock_export_excel']:
             return [IsOwnerOrManager()]
         return [IsAuthenticated()]
 
@@ -290,12 +290,106 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='low_stock/export_excel')
+    def low_stock_export_excel(self, request):
+        """Export low stock products to Excel."""
+        # Get low stock products
+        products = self.queryset.filter(
+            current_stock__lte=F('min_stock_level')
+        ).select_related('category')
+
+        # Prepare data for Excel export
+        data = []
+        for product in products:
+            data.append({
+                'SKU_ID': product.sku or '',
+                'Product_Name': product.name,
+                'Tally_Name': product.tally_name or '',
+                'Category': product.category.name if product.category else '',
+                'Cost_Price': float(product.cost_price) if product.cost_price else 0,
+                'Current_Stock': product.current_stock,
+                'Unit': product.unit,
+                'Minimum_Stock_Level': product.min_stock_level,
+                'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
+                'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
+                'Low_Stock': 'Yes' if product.is_low_stock else 'No',
+            })
+
+        # Create DataFrame
+        df = pd.DataFrame(data)
+
+        # Create Excel response
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="low_stock_products_export.xlsx"'
+
+        # Write to Excel
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Low Stock Products', index=False)
+
+            # Auto-adjust column widths
+            worksheet = writer.sheets['Low Stock Products']
+            for idx, col in enumerate(df.columns, 1):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
+
+        return response
+
     @action(detail=False, methods=['get'])
     def out_of_stock(self, request):
         """Get all out of stock products."""
         products = self.queryset.filter(current_stock=0)
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='out_of_stock/export_excel')
+    def out_of_stock_export_excel(self, request):
+        """Export out of stock products to Excel."""
+        # Get out of stock products
+        products = self.queryset.filter(
+            current_stock=0
+        ).select_related('category')
+
+        # Prepare data for Excel export
+        data = []
+        for product in products:
+            data.append({
+                'SKU_ID': product.sku or '',
+                'Product_Name': product.name,
+                'Tally_Name': product.tally_name or '',
+                'Category': product.category.name if product.category else '',
+                'Cost_Price': float(product.cost_price) if product.cost_price else 0,
+                'Current_Stock': product.current_stock,
+                'Unit': product.unit,
+                'Minimum_Stock_Level': product.min_stock_level,
+                'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
+                'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
+                'Low_Stock': 'Yes' if product.is_low_stock else 'No',
+            })
+
+        # Create DataFrame
+        df = pd.DataFrame(data)
+
+        # Create Excel response
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="out_of_stock_products_export.xlsx"'
+
+        # Write to Excel
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Out of Stock Products', index=False)
+
+            # Auto-adjust column widths
+            worksheet = writer.sheets['Out of Stock Products']
+            for idx, col in enumerate(df.columns, 1):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
+
+        return response
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
@@ -394,19 +488,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         data = []
         for product in products:
             data.append({
-                'SKU': product.sku or '',
-                'Product ID': product.id,
-                'Product Name': product.name,
-                'Tally Name': product.tally_name or '',
+                'SKU_ID': product.sku or '',
+                'Product_Name': product.name,
+                'Tally_Name': product.tally_name or '',
                 'Category': product.category.name if product.category else '',
-                'Cost Price': float(product.cost_price) if product.cost_price else 0,
-                'Current Stock': product.current_stock,
+                'Cost_Price': float(product.cost_price) if product.cost_price else 0,
+                'Current_Stock': product.current_stock,
                 'Unit': product.unit,
-                'Minimum Stock Level': product.min_stock_level,
-                'GST Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
-                'Total Stock Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
-                'Low Stock': 'Yes' if product.is_low_stock else 'No',
-                'Description': product.description or '',
+                'Minimum_Stock_Level': product.min_stock_level,
+                'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
+                'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
+                'Low_Stock': 'Yes' if product.is_low_stock else 'No',
             })
 
         # Create DataFrame

@@ -499,7 +499,7 @@ const Billing = () => {
           {hasAnyConsumableItems() && hasNonConsumableItems() && (
             <div className="mt-4 p-3 bg-red-100 border border-red-500 rounded-lg">
               <p className="text-sm text-red-500 text-center">
-                Cart cannot mix Consumable and Non-Consumable items together. To Ensure Accurate Billing
+                Cart cannot mix Consumable and Non-Consumable items together, To Ensure Accurate Billing.
               </p>
             </div>
           )}

@@ -476,7 +476,7 @@ const Products = () => {
                     required
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="pcs">Pieces</option>
                     <option value="kg">Kilograms</option>

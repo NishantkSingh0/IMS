@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FiPackage, FiAlertTriangle, FiTrendingUp, FiTrendingDown, FiLayers, FiDollarSign } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle, FiTrendingUp, FiTrendingDown, FiLayers, FiDollarSign, FiDownload } from 'react-icons/fi';
 
 const Inventory = () => {
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,46 @@ const Inventory = () => {
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount || 0);
+  };
+
+  const handleExportLowStockExcel = async () => {
+    try {
+      const blob = await inventoryAPI.exportLowStockExcel();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `low_stock_products_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Low stock products exported successfully');
+    } catch (error) {
+      toast.error('Failed to export low stock products');
+    }
+  };
+
+  const handleExportOutOfStockExcel = async () => {
+    try {
+      const blob = await inventoryAPI.exportOutOfStockExcel();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `out_of_stock_products_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Out of stock products exported successfully');
+    } catch (error) {
+      toast.error('Failed to export out of stock products');
+    }
   };
 
   const COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
@@ -193,9 +234,23 @@ const Inventory = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Low Stock Products */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <FiTrendingDown className="w-5 h-5 text-orange-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Low Stock Products</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <FiTrendingDown className="w-5 h-5 text-orange-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Low Stock Products</h2>
+            </div>
+            <button
+              onClick={handleExportLowStockExcel}
+              disabled={lowStockProducts.length === 0}
+              className={`text-sm inline-flex items-center gap-1 transition ${
+                lowStockProducts.length === 0
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-green-600 hover:text-green-700 hover:underline cursor-pointer'
+              }`}
+            >
+              <FiDownload className="w-4 h-4" />
+              <span>Export Excel</span>
+            </button>
           </div>
           {lowStockProducts.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -227,9 +282,23 @@ const Inventory = () => {
 
         {/* Out of Stock Products */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <FiAlertTriangle className="w-5 h-5 text-red-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Out of Stock Products</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <FiAlertTriangle className="w-5 h-5 text-red-500" />
+              <h2 className="text-lg font-semibold text-gray-900">Out of Stock Products</h2>
+            </div>
+            <button
+              onClick={handleExportOutOfStockExcel}
+              disabled={outOfStockProducts.length === 0}
+              className={`text-sm inline-flex items-center gap-1 transition ${
+                outOfStockProducts.length === 0
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-green-600 hover:text-green-700 hover:underline cursor-pointer'
+              }`}
+            >
+              <FiDownload className="w-4 h-4" />
+              <span>Export Excel</span>
+            </button>
           </div>
           {outOfStockProducts.length === 0 ? (
             <div className="text-center py-8 text-gray-500">

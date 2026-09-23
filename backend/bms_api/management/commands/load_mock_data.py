@@ -180,6 +180,11 @@ class Command(BaseCommand):
                 'description': 'Creates visual concepts, user experiences, and aesthetic standards that shape products, brands, and communications.'
             },
             {
+                'name': 'Plant & Maintenance',
+                'code': 'PL&MN',
+                'description': 'All the plant and machinery related products, which can be used for spares and repairs items.'
+            },
+            {
                 'name': 'Metal',
                 'code': 'METL',
                 'description': 'Fabrication, welding, shaping, and finishing of metal components and structures'
