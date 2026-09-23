@@ -314,7 +314,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 'Minimum_Stock_Level': product.min_stock_level,
                 'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
                 'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
-                'Low_Stock': 'Yes' if product.is_low_stock else 'No',
             })
 
         # Create DataFrame
@@ -368,7 +367,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 'Minimum_Stock_Level': product.min_stock_level,
                 'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
                 'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
-                'Low_Stock': 'Yes' if product.is_low_stock else 'No',
             })
 
         # Create DataFrame
@@ -485,9 +483,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def export_excel(self, request):
-        """Export all products to Excel."""
-        # Get all products (no pagination, no filters - always show all)
-        products = self.queryset.select_related('category').all()
+        """Export products to Excel with optional filters."""
+        # Apply filters if provided
+        queryset = self.filter_queryset(self.get_queryset())
+        products = queryset.select_related('category').all()
 
         # Prepare data for Excel export
         data = []

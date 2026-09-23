@@ -171,10 +171,12 @@ export const inventoryAPI = {
   createProduct: (data) => api.post('/inventory/products/', data),
   updateProduct: (id, data) => api.patch(`/inventory/products/${id}/`, data),
   searchByBarcode: (barcode) => api.get('/inventory/products/search_barcode/', { params: { barcode } }),
-  exportProductsExcel: () => {
+  exportProductsExcel: (params = {}) => {
     const token = localStorage.getItem('access_token');
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-    return fetch(`${API_URL}/inventory/products/export_excel/`, {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `${API_URL}/inventory/products/export_excel/${queryString ? '?' + queryString : ''}`;
+    return fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

@@ -167,7 +167,12 @@ const Products = () => {
 
   const handleExportExcel = async () => {
     try {
-      const blob = await inventoryAPI.exportProductsExcel();
+      // Prepare filter parameters
+      const params = {};
+      if (searchQuery) params.search = searchQuery;
+      if (selectedCategory) params.category = selectedCategory;
+
+      const blob = await inventoryAPI.exportProductsExcel(params);
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
