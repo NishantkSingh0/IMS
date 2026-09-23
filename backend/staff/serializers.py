@@ -187,16 +187,17 @@ class RolePermissionSerializer(serializers.ModelSerializer):
 
 class ActivityLogSerializer(serializers.ModelSerializer):
     """Serializer for ActivityLog model."""
-    
+
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
-    
+    created_at = serializers.DateTimeField(source='timestamp', read_only=True)
+
     class Meta:
         model = ActivityLog
         fields = [
             'id', 'user', 'user_name', 'user_email', 'action',
             'model_name', 'object_id', 'description', 'ip_address',
-            'user_agent', 'timestamp'
+            'user_agent', 'timestamp', 'created_at'
         ]
 
 

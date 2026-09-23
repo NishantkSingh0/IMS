@@ -208,7 +208,7 @@ const Inventory = () => {
                 type="category"
                 stroke="#6b7280"
                 width={100}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 8 }}
               />
 
               <Tooltip
