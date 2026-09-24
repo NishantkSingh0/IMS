@@ -201,7 +201,7 @@ const Invoices = () => {
           {/* Invoice Number — Larger / Primary */}
           <div className="flex-[1.4]">
             <label className="block text-xs font-medium text-gray-600 mb-1.5">
-              Department Name / Invoice Number 
+              Department Name / Slip ID 
             </label>
 
             <div className="relative">
@@ -213,7 +213,7 @@ const Invoices = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search department name or invoice number..."
+                placeholder="Search department name or Slip ID..."
                 className="w-full h-11 pl-10 pr-4 text-sm border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition"
               />
             </div>

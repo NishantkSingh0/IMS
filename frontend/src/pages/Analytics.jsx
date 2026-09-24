@@ -98,13 +98,13 @@ const Analytics = () => {
           color="indigo"
         />
         <KPICard
-          title="Total Invoices"
+          title="Total Slips"
           value={salesInvoices?.count?.toLocaleString() || 0}
           icon={FiShoppingCart}
           color="purple"
         />
         <KPICard
-          title="Avg Invoice Value"
+          title="Avg Slip Value"
           value={formatCurrency(stats?.average_invoice_value)}
           icon={TbMathAvg}
           color="cyan"
@@ -170,7 +170,7 @@ const Analytics = () => {
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorOrders)"
-              name="Invoices"
+              name="Slips"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -204,7 +204,7 @@ const Analytics = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Invoices</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Slips</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlySales}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -225,6 +225,7 @@ const Analytics = () => {
               <Line
                 type="monotone"
                 dataKey="invoice_count"
+                name="Slip Count"
                 stroke="#7c3aed"
                 strokeWidth={3}
                 dot={{ fill: '#7c3aed', strokeWidth: 2 }}

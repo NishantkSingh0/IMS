@@ -7,6 +7,7 @@ const ownerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Analytics', href: '/analytics', icon: FiTrendingUp },
   { name: 'Sales', href: '/sales', icon: FiShoppingCart },
+  { name: 'Products', href: '/products', icon: FiPackage },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },

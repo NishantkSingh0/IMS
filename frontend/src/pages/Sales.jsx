@@ -96,7 +96,7 @@ const Sales = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Period Invoices</p>
+              <p className="text-sm text-gray-500">Period Slips</p>
               <p className="text-2xl font-bold text-purple-600">
                 {salesInvoices?.count?.toLocaleString() || 0}
               </p>
