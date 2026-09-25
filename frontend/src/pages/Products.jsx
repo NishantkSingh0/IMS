@@ -238,7 +238,7 @@ const Products = () => {
                   setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
                 },
                 title: 'Add New Product',
-                message: 'Are you sure you want to add a new product? If it already exists, please edit the existing product to avoid duplicates.',
+                message: 'Are you sure you want to add a new product? If it already exists, please edit the existing product to avoid duplicacy.',
                 type: 'info',
                 showCancel: true
               });

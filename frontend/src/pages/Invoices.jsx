@@ -405,40 +405,53 @@ const Invoices = () => {
               </button>
             </div>
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
+              
               {/* Invoice Header */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
+
+                {/* Department */}
                 <div>
                   <p className="text-sm text-gray-500">Department</p>
                   <p className="font-medium text-gray-900">
                     {selectedInvoice.department_name || '-'}
                   </p>
                 </div>
+
+                {/* Date */}
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Date</p>
                   <p className="font-medium text-gray-900">
-                    {format(new Date(selectedInvoice.created_at), 'dd MMM yyyy, hh:mm a')}
+                    {format(
+                      new Date(selectedInvoice.created_at),
+                      'dd MMM yyyy, hh:mm a'
+                    )}
                   </p>
                 </div>
+
+                {/* Department Code */}
                 <div>
                   <p className="text-sm text-gray-500">Department Code</p>
                   <p className="font-medium text-gray-900">
                     {selectedInvoice.department_code || '-'}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Project</p>
+
+                {/* Project Created By */}
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Project Created By</p>
                   <p className="font-medium text-gray-900">
+                    {selectedInvoice.project_created_by || '-'}
+                  </p>
+                </div>
+
+                {/* Project - Full Width */}
+                <div className="col-span-2">
+                  <p className="text-sm text-gray-500">Project</p>
+                  <p className="font-medium text-gray-900 break-words">
                     {selectedInvoice.project_name || '-'}
                   </p>
                 </div>
-                {selectedInvoice.project_created_by && (
-                  <div>
-                    <p className="text-sm text-gray-500">Project Created By</p>
-                    <p className="font-medium text-gray-900">
-                      {selectedInvoice.project_created_by}
-                    </p>
-                  </div>
-                )}
+
               </div>
 
               {/* Invoice Items */}
