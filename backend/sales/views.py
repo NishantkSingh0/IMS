@@ -192,7 +192,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     'Product Name': item.product_name or '',
                     'Quantity': item.quantity,
                     'Unit Price': float(item.unit_price) if item.unit_price else 0,
-                    'Discount': float(item.discount) if item.discount else 0,
                     'Tax Rate (%)': float(item.tax_rate) if item.tax_rate else 0,
                     'Tax Amount': float(item.tax_amount) if item.tax_amount else 0,
                     'Total': float(item.total) if item.total else 0,
@@ -201,7 +200,11 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
         # Create DataFrame
         df = pd.DataFrame(data)
-
+        summary_row={'Slip ID': ' ', 'Outward At': ' ', 'Department': ' ', 'Project Name': ' ', 'Project Created By': ' ', 'Product SKU': ' ', 'Product Name': ' ', 'Quantity': ' ', 'Unit Price': ' ', 'Discount': ' ', 'Tax Rate (%)': 'TOTAL', 'Tax Amount': df['Tax Amount'].sum(), 'Total': df['Total'].sum(), 'Outward By': ' '}
+        df = pd.concat(
+            [df, pd.DataFrame([summary_row])],
+            ignore_index=True
+        )
         # Create Excel response
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="outward_slips_export.xlsx"'
@@ -214,7 +217,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             worksheet = writer.sheets['Outward Slips']
             for idx, col in enumerate(df.columns, 1):
                 max_length = max(
-                    df[col].astype(str).apply(len).max(),
+                    df[col].fillna('').map(lambda x: len(str(x))).max(),
                     len(str(col))
                 )
                 worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
