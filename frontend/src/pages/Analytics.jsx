@@ -198,7 +198,7 @@ const Analytics = () => {
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 }}
               />
-              <Bar dataKey="total_sales" fill="#111827" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total_sales" name="Total Issues" fill="#111827" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
