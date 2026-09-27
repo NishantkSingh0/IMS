@@ -239,9 +239,9 @@ const Dashboard = () => {
                     />
                     <YAxis
                       type="category"
-                      dataKey="product__name"
+                      dataKey="product_name"
                       tick={{ fontSize: 11, fill: '#6b7280' }}
-                      width={40}
+                      width={120}
                     />
                     <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
 
@@ -317,9 +317,9 @@ const Dashboard = () => {
                     />
                     <YAxis
                       type="category"
-                      dataKey="product__name"
+                      dataKey="product_name"
                       tick={{ fontSize: 11, fill: '#6b7280' }}
-                      width={40}
+                      width={120}
                     />
                     <Tooltip formatter={(value) => [`${value} units`, 'Issued'] } contentStyle={{ borderRadius: "10px" }}/>
 
