@@ -213,12 +213,12 @@ const Billing = () => {
       setCart(
         cart.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: parseFloat((item.quantity + 1).toFixed(2)) }
             : item
         )
       );
     } else {
-      if (product.current_stock < 1) {
+      if (product.current_stock < 0.01) {
         toast.error('Product is out of stock');
         return;
       }
@@ -231,7 +231,7 @@ const Billing = () => {
   };
 
   const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) {
+    if (newQuantity < 0.01) {
       removeFromCart(productId);
       return;
     }
@@ -455,7 +455,7 @@ const Billing = () => {
                     <td className="py-3">
                       <div className="flex items-center justify-center space-x-2">
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.product.id, Math.max(0.01, parseFloat((item.quantity - 0.25).toFixed(2))))}
                           className="p-1 rounded-lg hover:bg-gray-100"
                         >
                           <FiMinus className="w-4 h-4" />
@@ -464,13 +464,14 @@ const Billing = () => {
                           type="number"
                           value={item.quantity}
                           onChange={(e) =>
-                            updateQuantity(item.product.id, parseInt(e.target.value) || 0)
+                            updateQuantity(item.product.id, parseFloat(e.target.value) || 0)
                           }
                           className="w-12 text-center border rounded-lg py-1"
-                          min="1"
+                          min="0.01"
+                          step="0.01"
                         />
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.product.id, parseFloat((item.quantity + 1).toFixed(2)))}
                           className="p-1 rounded-lg hover:bg-gray-100"
                         >
                           <FiPlus className="w-4 h-4" />

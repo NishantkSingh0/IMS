@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from decimal import Decimal
 from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 
 
@@ -211,7 +212,7 @@ class StockAdjustmentSerializer(serializers.Serializer):
     """Serializer for stock adjustment."""
     
     product_id = serializers.IntegerField()
-    quantity = serializers.IntegerField()
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'))
     transaction_type = serializers.ChoiceField(choices=['in', 'out', 'adjustment', 'damage', 'return'])
     unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     reference = serializers.CharField(max_length=100, required=False, allow_blank=True)

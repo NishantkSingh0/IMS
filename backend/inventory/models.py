@@ -97,8 +97,8 @@ class Product(models.Model):
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     # Stock
-    current_stock = models.IntegerField(default=0)
-    min_stock_level = models.IntegerField(default=10)
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    min_stock_level = models.DecimalField(max_digits=10, decimal_places=2, default=10)
     unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='pcs')
 
     # Tax
@@ -144,9 +144,9 @@ class StockTransaction(models.Model):
     
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_transactions')
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
-    quantity = models.IntegerField()
-    previous_stock = models.IntegerField()
-    new_stock = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    previous_stock = models.DecimalField(max_digits=10, decimal_places=2)
+    new_stock = models.DecimalField(max_digits=10, decimal_places=2)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     reference = models.CharField(max_length=100, blank=True)  # Invoice number, PO number, etc.
     notes = models.TextField(blank=True)

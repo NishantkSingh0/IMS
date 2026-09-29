@@ -73,7 +73,7 @@ class InvoiceItem(models.Model):
     product_name = models.CharField(max_length=200)
     product_sku = models.CharField(max_length=50)
     
-    quantity = models.IntegerField(default=1)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
@@ -162,7 +162,7 @@ class Return(models.Model):
     return_number = models.CharField(max_length=50, unique=True)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='returns')
     invoice_item = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name='returns')
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     reason = models.CharField(max_length=20, choices=RETURN_REASONS)
     reason_detail = models.TextField(blank=True)
     refund_amount = models.DecimalField(max_digits=12, decimal_places=2)

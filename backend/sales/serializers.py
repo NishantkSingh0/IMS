@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
+from decimal import Decimal
 from .models import Invoice, InvoiceItem, Payment, DailySales, Return
 from inventory.models import Department, Product, StockTransaction
 
@@ -23,7 +24,7 @@ class InvoiceItemCreateSerializer(serializers.Serializer):
     """Serializer for creating invoice items."""
 
     product_id = serializers.IntegerField()
-    quantity = serializers.IntegerField(min_value=1, max_value=10000)
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'), max_value=Decimal('10000'))
     unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     discount = serializers.DecimalField(max_digits=10, decimal_places=2, default=0, min_value=0)
 
