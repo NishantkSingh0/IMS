@@ -225,9 +225,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'tally_name', 'sku', 'description']
     ordering_fields = ['name', 'current_stock', 'created_at']
     ordering = ['name']
-    
-    # Disable delete functionality
-    http_method_names = ['get', 'post', 'put', 'patch', 'head', 'options']
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -235,7 +232,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'adjust_stock', 'export_excel', 'low_stock_export_excel', 'out_of_stock_export_excel']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'adjust_stock', 'export_excel', 'low_stock_export_excel', 'out_of_stock_export_excel']:
             return [IsOwnerOrManager()]
         return [IsAuthenticated()]
 
@@ -280,7 +277,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer.save()
         cache.delete('products_list_page1')
         cache.delete('inventory_stats')
-    
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete('products_list_page1')
+        cache.delete('inventory_stats')
+
     @action(detail=False, methods=['get'])
     def low_stock(self, request):
         """Get all low stock products (excluding out of stock)."""
