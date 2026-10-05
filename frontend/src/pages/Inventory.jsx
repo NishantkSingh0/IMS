@@ -86,8 +86,39 @@ const Inventory = () => {
     }
   };
 
-  const COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
-
+  const COLORS = [
+    '#4f46e5', // Indigo
+    '#7c3aed', // Violet
+    '#06b6d4', // Cyan
+    '#10b981', // Emerald
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+    '#ec4899', // Pink
+    '#3b82f6', // Blue
+    '#8b5cf6', // Purple
+    '#14b8a6', // Teal
+    '#22c55e', // Green
+    '#f97316', // Orange
+    '#e11d48', // Rose
+    '#0ea5e9', // Sky
+    '#84cc16', // Lime
+    '#a855f7', // Purple
+    '#0891b2', // Cyan Dark
+    '#059669', // Emerald Dark
+    '#d97706', // Amber Dark
+    '#dc2626', // Red Dark
+    '#db2777', // Pink Dark
+    '#2563eb', // Blue Dark
+    '#9333ea', // Violet Dark
+    '#0d9488', // Teal Dark
+    '#16a34a', // Green Dark
+    '#ea580c', // Orange Dark
+    '#be123c', // Rose Dark
+    '#0284c7', // Sky Dark
+    '#65a30d', // Lime Dark
+    '#c026d3', // Fuchsia
+  ]
+  
   // Prepare category distribution data
   const categoryData = categories.map((cat) => ({
     name: cat.name,
