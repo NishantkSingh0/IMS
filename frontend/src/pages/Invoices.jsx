@@ -182,7 +182,7 @@ const Invoices = () => {
           )}
 
           {/* Download Button - Only visible when filters are applied and user is owner */}
-          {((searchQuery || projectFilter || fromDate || toDate) && invoices.length>0 && user?.role === 'owner') && (
+          {((searchQuery || projectFilter || fromDate || toDate) && invoices.length>0) && (
             <button
               onClick={handleExportExcel}
               className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition"
