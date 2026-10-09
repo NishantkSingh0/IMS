@@ -55,11 +55,8 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # Statistics endpoints are available to all authenticated users for dashboard
-        if self.action in ['stats', 'daily_summary', 'monthly_summary', 'top_products', 'by_department', 'by_project']:
+        if self.action in ['stats', 'daily_summary', 'monthly_summary', 'top_products', 'by_department', 'by_project', 'export_excel']:
             return [IsAuthenticated()]
-        # Analytics endpoint is restricted to owners only
-        if self.action in ['export_excel']:
-            return [IsOwner()]
         # CRUD operations are restricted to owners and managers
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsOwnerOrManager()]
