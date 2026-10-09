@@ -101,7 +101,7 @@ const Dashboard = () => {
       bgColor: 'bg-green-50',
     },
     {
-      name: 'Total Invoices',
+      name: 'Total Slips',
       value: salesStats?.total_invoices?.toLocaleString() || '0',
       icon: FiShoppingBag,
       color: 'bg-indigo-500',

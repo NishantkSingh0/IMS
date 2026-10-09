@@ -228,7 +228,7 @@ const Products = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Stocks</h1>
           <p className="text-gray-500">Manage your product catalog</p>
           <div className="flex items-center gap-4 mt-2 text-xs">
             <span className="flex items-center gap-1">

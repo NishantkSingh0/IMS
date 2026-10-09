@@ -17,7 +17,7 @@ const ownerNavigation = [
 const managerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Issue', href: '/billing', icon: FiShoppingCart },
-  { name: 'Products', href: '/products', icon: FiPackage },
+  { name: 'Stocks', href: '/products', icon: FiPackage },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
