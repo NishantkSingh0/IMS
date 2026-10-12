@@ -1,27 +1,9 @@
 import { useState, useEffect } from 'react';
 import { salesAPI, inventoryAPI, staffAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import {
-  FiDollarSign,
-  FiShoppingBag,
-  FiBriefcase,
-  FiPackage,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiAlertTriangle,
-} from 'react-icons/fi';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { FiShoppingBag, FiBriefcase, FiPackage, FiAlertTriangle } from 'react-icons/fi';
+import { FaRupeeSign } from "react-icons/fa";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -96,7 +78,7 @@ const Dashboard = () => {
     {
       name: 'Issued Value',
       value: formatCurrency(salesStats?.total_sales),
-      icon: FiDollarSign,
+      icon: FaRupeeSign,
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
     },

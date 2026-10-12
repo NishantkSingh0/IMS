@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FiPackage, FiAlertTriangle, FiTrendingUp, FiTrendingDown, FiLayers, FiDollarSign, FiDownload } from 'react-icons/fi';
+import { FaRupeeSign } from "react-icons/fa";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { FiPackage, FiAlertTriangle, FiTrendingUp, FiTrendingDown, FiDownload } from 'react-icons/fi';
 
 const Inventory = () => {
   const [loading, setLoading] = useState(true);
@@ -166,7 +167,7 @@ const Inventory = () => {
         <StatCard
           title="Stock Value"
           value={formatCurrency(stats?.total_stock_value)}
-          icon={FiDollarSign}
+          icon={FaRupeeSign}
           color="green"
         />
       </div>

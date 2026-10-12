@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { salesAPI } from '../services/api';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FiDollarSign, FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { FiShoppingCart, FiTrendingUp } from 'react-icons/fi';
+import { FaRupeeSign } from "react-icons/fa";
 import { TbMathAvg } from "react-icons/tb";
 import { format, parseISO } from 'date-fns';
 
@@ -94,7 +95,7 @@ const Analytics = () => {
         <KPICard
           title="Issued Value"
           value={formatCurrency(stats?.total_sales)}
-          icon={FiDollarSign}
+          icon={FaRupeeSign}
           color="indigo"
         />
         <KPICard

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { salesAPI } from '../services/api';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { FiCalendar, FiDollarSign, FiShoppingCart, FiBriefcase } from 'react-icons/fi';
+import { FiCalendar, FiShoppingCart, FiBriefcase } from 'react-icons/fi';
+import { FaRupeeSign } from "react-icons/fa";
+
 
 const Sales = () => {
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ const Sales = () => {
                 {formatCurrency(dailySales.reduce((sum, d) => sum + (d.total_sales || 0), 0))}
               </p>
             </div>
-            <FiDollarSign className="w-8 h-8 text-indigo-400" />
+            <FaRupeeSign className="w-8 h-8 text-indigo-400" />
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm p-6">
