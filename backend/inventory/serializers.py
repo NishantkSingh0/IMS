@@ -43,6 +43,11 @@ class SupplierSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Supplier name is required")
         if len(value) > 200:
             raise serializers.ValidationError("Supplier name cannot exceed 200 characters")
+        existing = Supplier.objects.filter(name__iexact=value.strip())
+        if self.instance:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise serializers.ValidationError("Supplier with this name already exists.")
         return value.strip()
 
     def validate_phone(self, value):
@@ -68,7 +73,7 @@ class SupplierListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Supplier
-        fields = ['id', 'name', 'phone', 'city', 'is_active']
+        fields = ['id', 'name', 'phone', 'city', 'state', 'address', 'gst_number', 'is_active']
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -142,12 +147,13 @@ class ProductSerializer(serializers.ModelSerializer):
             'category', 'category_name',
             'cost_price',
             'current_stock', 'min_stock_level', 'unit',
-            'gst_rate', 'hsn_code',
+            'gst_rate', 'hsn_code', 'parent_product',
             'is_low_stock', 'stock_value',
             'created_at', 'updated_at'
         ]
         extra_kwargs = {
-            'sku': {'required': False, 'allow_blank': True}
+            'sku': {'required': False, 'allow_blank': True},
+            'parent_product': {'read_only': True},
         }
 
     def validate_name(self, value):
@@ -188,7 +194,8 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'name', 'tally_name', 'category', 'category_name',
-            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'is_low_stock'
+            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'hsn_code',
+            'parent_product', 'is_low_stock'
         ]
 
 

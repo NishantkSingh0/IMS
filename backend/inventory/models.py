@@ -92,6 +92,10 @@ class Product(models.Model):
     tally_name = models.CharField(max_length=150, blank=True, help_text='Tally product name for integration')
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
+    parent_product = models.ForeignKey(
+        'self', on_delete=models.PROTECT, null=True, blank=True, related_name='price_variants',
+        help_text='Original product when this item was created by a purchase price change'
+    )
 
     # Pricing
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)

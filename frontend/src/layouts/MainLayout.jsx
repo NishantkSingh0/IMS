@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers, FiMaximize, FiMinimize } from 'react-icons/fi';
+import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers, FiMaximize, FiMinimize, FiTruck } from 'react-icons/fi';
 
 const ownerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Analytics', href: '/analytics', icon: FiTrendingUp },
   { name: 'Outward analytics', href: '/sales', icon: FiShoppingCart },
   { name: 'Stocks', href: '/products', icon: FiPackage },
+  { name: 'Inwards', href: '/inwards', icon: FiTruck },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Inventory', href: '/inventory', icon: FiBox },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
@@ -18,6 +19,7 @@ const managerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
   { name: 'Issue', href: '/billing', icon: FiShoppingCart },
   { name: 'Stocks', href: '/products', icon: FiPackage },
+  { name: 'Inwards', href: '/inwards', icon: FiTruck },
   { name: 'Outwards', href: '/invoices', icon: FiFileText },
   { name: 'Departments', href: '/departments', icon: FiBriefcase },
   { name: 'Inventory', href: '/inventory', icon: FiBox },

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'bms_api',
     'inventory',
     'sales',
+    'purchases',
     'crm',
     'staff',
 ]

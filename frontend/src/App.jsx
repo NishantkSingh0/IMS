@@ -15,6 +15,7 @@ const Staff = lazy(() => import('./pages/Staff'));
 const Products = lazy(() => import('./pages/Products'));
 const Billing = lazy(() => import('./pages/Billing'));
 const Invoices = lazy(() => import('./pages/Invoices'));
+const Inwards = lazy(() => import('./pages/Inwards'));
 
 // Loading component for Suspense
 const PageLoader = () => (
@@ -34,6 +35,7 @@ const ROUTE_PERMISSIONS = {
   '/staff': ['owner'],
   '/products': ['owner', 'manager'],
   '/billing': ['owner', 'manager'],
+  '/inwards': ['owner', 'manager'],
 };
 
 // Protected Route Component
@@ -130,6 +132,15 @@ function App() {
                   </RoleProtectedRoute>
                 } 
               />
+              <Route
+                path="inwards"
+                element={
+                  <RoleProtectedRoute allowedRoles={['owner', 'manager']}>
+                    <Inwards />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route path="inwards/new" element={<Navigate to="/inwards" replace state={{ openNewInward: true }} />} />
             </Route>
           </Routes>
         </Suspense>

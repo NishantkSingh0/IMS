@@ -222,7 +222,8 @@ export const inventoryAPI = {
   adjustStock: (id, data) => api.post(`/inventory/products/${id}/adjust_stock/`, data),
   
   getCategories: () => api.get('/inventory/categories/'),
-  getSuppliers: () => api.get('/inventory/suppliers/'),
+  getSuppliers: (params) => api.get('/inventory/suppliers/', { params }),
+  createSupplier: (data) => api.post('/inventory/suppliers/', data),
   getDepartments: (params) => api.get('/inventory/departments/', { params }),
   getDepartment: (id) => api.get(`/inventory/departments/${id}/`),
   createDepartment: (data) => api.post('/inventory/departments/', data),
@@ -260,6 +261,30 @@ export const salesAPI = {
     }).then(response => {
       if (!response.ok) {
         throw new Error('Failed to export invoices');
+      }
+      return response.blob();
+    });
+  },
+};
+
+// Purchases (Inward) API
+export const purchaseAPI = {
+  getInwards: (params) => api.get('/purchases/inwards/', { params }),
+  getInward: (id) => api.get(`/purchases/inwards/${id}/`),
+  createInward: (data) => api.post('/purchases/inwards/', data, { silent: true }),
+  checkInvoice: (supplier, invoiceNumber) =>
+    api.get('/purchases/inwards/check_invoice/', { params: { supplier, invoice_number: invoiceNumber }, silent: true }),
+  getStats: () => api.get('/purchases/inwards/stats/'),
+  exportInwardsExcel: (params) => {
+    const token = localStorage.getItem('access_token');
+    const queryString = new URLSearchParams(params).toString();
+    return fetch(`${API_URL}/purchases/inwards/export_excel/${queryString ? '?' + queryString : ''}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to export inwards');
       }
       return response.blob();
     });

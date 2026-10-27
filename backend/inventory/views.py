@@ -90,7 +90,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['city', 'state', 'is_active']
-    search_fields = ['name', 'contact_person', 'email', 'phone']
+    search_fields = ['name', 'contact_person', 'email', 'phone', 'gst_number']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
 
@@ -105,6 +105,10 @@ class SupplierViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
+        # Searched/filtered requests (e.g. vendor autocomplete) must not use the shared cache
+        if request.query_params:
+            return super().list(request, *args, **kwargs)
+
         cache_key = 'suppliers_list'
         cached_data = cache.get(cache_key)
         if cached_data is not None:
