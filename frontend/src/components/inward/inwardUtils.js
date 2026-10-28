@@ -19,7 +19,7 @@ const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 export const lineAmount = (quantity, rate) => round2((parseFloat(quantity) || 0) * (parseFloat(rate) || 0));
 
 /** Invoice totals; GST is calculated per tax-rate group, matching the backend. */
-export const calculateTotals = (rows, roundOff) => {
+export const calculateTotals = (rows, roundOff, freight = '') => {
   const taxableByRate = {};
   rows.forEach((row) => {
     const rate = parseFloat(row.tax_rate) || 0;
@@ -30,7 +30,8 @@ export const calculateTotals = (rows, roundOff) => {
     Object.entries(taxableByRate).reduce((sum, [rate, amount]) => sum + round2((amount * parseFloat(rate)) / 100), 0)
   );
   const round = parseFloat(roundOff) || 0;
-  return { subtotal, tax, roundOff: round, total: round2(subtotal + tax + round) };
+  const freightCharges = parseFloat(freight) || 0;
+  return { subtotal, tax, roundOff: round, freight: freightCharges, total: round2(subtotal + tax + round + freightCharges) };
 };
 
 const FIELD_LABELS = {

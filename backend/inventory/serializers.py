@@ -145,7 +145,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'sku', 'name', 'tally_name', 'description',
             'category', 'category_name',
-            'cost_price',
+            'cost_price', 'wastage_percent',
             'current_stock', 'min_stock_level', 'unit',
             'gst_rate', 'hsn_code', 'parent_product',
             'is_low_stock', 'stock_value', 'last_movement_at',
@@ -207,7 +207,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'name', 'tally_name', 'category', 'category_name',
-            'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'hsn_code',
+            'cost_price', 'wastage_percent', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'hsn_code',
             'parent_product', 'is_low_stock', 'last_movement_at'
         ]
 

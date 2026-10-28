@@ -190,15 +190,16 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     'Product Name': item.product_name or '',
                     'Quantity': item.quantity,
                     'Unit Price': float(item.unit_price) if item.unit_price else 0,
-                    'Tax Rate (%)': float(item.tax_rate) if item.tax_rate else 0,
-                    'Tax Amount': float(item.tax_amount) if item.tax_amount else 0,
+                    'Wastage (%)': float(item.wastage_percent) if item.wastage_percent else 0,
+                    'Wastage Amount': float(item.wastage_amount) if item.wastage_amount else 0,
+                    'Discount': float(item.discount) if item.discount else 0,
                     'Total': float(item.total) if item.total else 0,
                     'Outward By': invoice.created_by.get_full_name() if invoice.created_by else '',
                 })
 
         # Create DataFrame
         df = pd.DataFrame(data)
-        summary_row={'Slip ID': ' ', 'Outward At': ' ', 'Department': ' ', 'Project Name': ' ', 'Project Created By': ' ', 'Product SKU': ' ', 'Product Name': ' ', 'Quantity': ' ', 'Unit Price': ' ', 'Discount': ' ', 'Tax Rate (%)': 'TOTAL', 'Tax Amount': df['Tax Amount'].sum(), 'Total': df['Total'].sum(), 'Outward By': ' '}
+        summary_row={'Slip ID': ' ', 'Outward At': ' ', 'Department': ' ', 'Project Name': ' ', 'Project Created By': ' ', 'Product SKU': ' ', 'Product Name': ' ', 'Quantity': ' ', 'Unit Price': ' ', 'Wastage (%)': ' ', 'Wastage Amount': ' ', 'Discount': 'TOTAL', 'Total': df['Total'].sum(), 'Outward By': ' '}
         df = pd.concat(
             [df, pd.DataFrame([summary_row])],
             ignore_index=True

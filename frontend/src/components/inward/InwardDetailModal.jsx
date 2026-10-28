@@ -80,6 +80,12 @@ const InwardDetailModal = ({ inward, onClose }) => (
             <span className="text-gray-500">GST</span>
             <span className="text-gray-900">{formatCurrency(inward.tax_amount)}</span>
           </div>
+          {parseFloat(inward.freight_charges) !== 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Freight / Additional Charges</span>
+              <span className="text-gray-900">{formatCurrency(inward.freight_charges)}</span>
+            </div>
+          )}
           {parseFloat(inward.round_off) !== 0 && (
             <div className="flex justify-between">
               <span className="text-gray-500">Round Off</span>

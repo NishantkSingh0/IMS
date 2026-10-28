@@ -23,8 +23,8 @@ class StockHistoryTests(APITestCase):
         )
         self.department = Department.objects.create(name='Fabrication', code='FAB')
         self.tools = Category.objects.create(name='TOOLS')
-        self.tap = Product.objects.create(name='THREAD TAP', category=self.tools, cost_price=Decimal('100.00'), unit='pcs', current_stock=0)
-        self.idle = Product.objects.create(name='IDLE ITEM', category=self.tools, cost_price=Decimal('10.00'), unit='pcs', current_stock=3)
+        self.tap = Product.objects.create(name='THREAD TAP', category=self.tools, cost_price=Decimal('100.00'), unit='pcs', current_stock=0, wastage_percent=Decimal('10'))
+        self.idle = Product.objects.create(name='IDLE ITEM', category=self.tools, cost_price=Decimal('10.00'), unit='pcs', current_stock=3, wastage_percent=Decimal('0'))
 
     def inward(self, quantity, number='INV-1'):
         res = self.client.post('/api/purchases/inwards/', {
@@ -104,6 +104,56 @@ class StockHistoryTests(APITestCase):
         df = pd.read_excel(BytesIO(export.content))
         self.assertEqual(list(df['Product_Name']), ['THREAD TAP'])
         self.assertEqual(df['Last_Updated'][0], timezone.localdate().strftime('%d-%m-%Y'))
+
+    def test_wastage_required_once_and_outward_uplifts_rate_without_gst(self):
+        loose = Product.objects.create(name='LOOSE SCREW', category=self.tools, cost_price=Decimal('100.00'), unit='pcs', current_stock=0)
+
+        # First inward must carry the wastage %; it is saved on the product (0 is valid too)
+        res = self.client.post('/api/purchases/inwards/', {
+            'supplier_id': self.supplier.id, 'supplier_invoice_number': 'W-1',
+            'supplier_invoice_date': timezone.localdate().isoformat(),
+            'items': [{'product_id': loose.id, 'quantity': '4', 'unit_price': '100.00'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('wastage_percent', str(res.data))
+
+        res = self.client.post('/api/purchases/inwards/', {
+            'supplier_id': self.supplier.id, 'supplier_invoice_number': 'W-1',
+            'supplier_invoice_date': timezone.localdate().isoformat(),
+            'items': [{'product_id': loose.id, 'quantity': '4', 'unit_price': '100.00', 'wastage_percent': '5'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        loose.refresh_from_db()
+        self.assertEqual(loose.wastage_percent, Decimal('5'))
+
+        # Later inwards no longer need the field
+        res = self.client.post('/api/purchases/inwards/', {
+            'supplier_id': self.supplier.id, 'supplier_invoice_number': 'W-2',
+            'supplier_invoice_date': timezone.localdate().isoformat(),
+            'items': [{'product_id': loose.id, 'quantity': '1', 'unit_price': '100.00'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+
+        # Outward: rate = 100 + 5% = 105, no GST on the slip
+        res = self.client.post('/api/sales/invoices/', {
+            'department_id': self.department.id, 'project_name': 'P',
+            'items': [{'product_id': loose.id, 'quantity': '2'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        item = res.data['items'][0]
+        self.assertEqual((Decimal(item['unit_price']), Decimal(item['wastage_amount'])), (Decimal('105.00'), Decimal('10.00')))
+        self.assertEqual(Decimal(item['tax_amount']), Decimal('0'))
+        self.assertEqual((Decimal(res.data['subtotal']), Decimal(res.data['tax_amount']), Decimal(res.data['total_amount'])),
+                         (Decimal('210.00'), Decimal('0.00'), Decimal('210.00')))
+
+        # A product with no wastage yet still issues at plain cost (not blocked)
+        unwasted = Product.objects.create(name='UNPRICED NAIL', category=self.tools, cost_price=Decimal('50.00'), unit='pcs', current_stock=10)
+        res = self.client.post('/api/sales/invoices/', {
+            'department_id': self.department.id, 'project_name': 'P',
+            'items': [{'product_id': unwasted.id, 'quantity': '1'}],
+        }, format='json')
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(Decimal(res.data['items'][0]['unit_price']), Decimal('50.00'))
 
     def test_history_requires_owner_or_manager(self):
         worker = User.objects.create_user(email='worker@test.com', password='pass12345', first_name='W', last_name='K', role='worker')

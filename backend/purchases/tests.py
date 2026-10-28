@@ -20,7 +20,7 @@ class InwardTests(APITestCase):
         )
         self.tools = Category.objects.create(name='TOOLS')
         self.metal = Category.objects.create(name='METAL')
-        self.tap = Product.objects.create(name='THREAD TAP HSS 6MM', category=self.tools, cost_price=Decimal('1087.00'), unit='pack', gst_rate=18, hsn_code='8207', current_stock=1)
+        self.tap = Product.objects.create(name='THREAD TAP HSS 6MM', category=self.tools, cost_price=Decimal('1087.00'), unit='pack', gst_rate=18, hsn_code='8207', current_stock=1, wastage_percent=Decimal('5'))
 
     def payload(self, items, number='AM/25-27/317', **extra):
         return {
@@ -85,7 +85,7 @@ class InwardTests(APITestCase):
 
     def test_new_product_created_and_stocked(self):
         res = self.post(self.payload([{
-            'new_product': {'name': 'Vice  Bench 6"', 'unit': 'PCS', 'hsn_code': '8205', 'gst_rate': '18', 'category': self.tools.id},
+            'new_product': {'name': 'Vice  Bench 6"', 'unit': 'PCS', 'hsn_code': '8205', 'gst_rate': '18', 'wastage_percent': '5', 'category': self.tools.id},
             'quantity': '1', 'unit_price': '9200',
         }]))
         self.assertEqual(res.status_code, 201, res.data)
@@ -95,14 +95,14 @@ class InwardTests(APITestCase):
 
     def test_new_product_requires_category(self):
         res = self.post(self.payload([{
-            'new_product': {'name': 'Vice Bench 6"', 'unit': 'pcs', 'gst_rate': '18'},
+            'new_product': {'name': 'Vice Bench 6"', 'unit': 'pcs', 'gst_rate': '18', 'wastage_percent': '0'},
             'quantity': '1', 'unit_price': '9200',
         }]))
         self.assertEqual(res.status_code, 400)
         self.assertFalse(Product.objects.filter(name='Vice Bench 6"').exists())
 
     def test_uncategorised_product_requires_category_which_is_saved(self):
-        bare = Product.objects.create(name='Hand File 12"', cost_price=Decimal('484'), unit='pcs', gst_rate=18)
+        bare = Product.objects.create(name='Hand File 12"', cost_price=Decimal('484'), unit='pcs', gst_rate=18, wastage_percent=Decimal('2'))
         item = {'product_id': bare.id, 'quantity': '5', 'unit_price': '484'}
         res = self.post(self.payload([item]))
         self.assertEqual(res.status_code, 400)
@@ -122,7 +122,7 @@ class InwardTests(APITestCase):
 
     def test_new_product_with_existing_name_rejected(self):
         res = self.post(self.payload([{
-            'new_product': {'name': 'thread tap hss 6mm', 'unit': 'pcs', 'gst_rate': '18', 'category': self.tools.id},
+            'new_product': {'name': 'thread tap hss 6mm', 'unit': 'pcs', 'gst_rate': '18', 'wastage_percent': '0', 'category': self.tools.id},
             'quantity': '1', 'unit_price': '10',
         }]))
         self.assertEqual(res.status_code, 400)
@@ -131,13 +131,22 @@ class InwardTests(APITestCase):
     def test_totals_match_paper_invoice(self):
         res = self.post(self.payload([
             {'product_id': self.tap.id, 'quantity': '2', 'unit_price': '1087'},
-            {'new_product': {'name': 'Tool Bit Blank', 'unit': 'pcs', 'gst_rate': '18', 'category': self.tools.id}, 'quantity': '2', 'unit_price': '3788'},
+            {'new_product': {'name': 'Tool Bit Blank', 'unit': 'pcs', 'gst_rate': '18', 'wastage_percent': '0', 'category': self.tools.id}, 'quantity': '2', 'unit_price': '3788'},
         ], round_off='0.10'))
         self.assertEqual(res.status_code, 201, res.data)
         # 2174 + 7576 = 9750; GST 18% = 1755; total = 11505.10
         self.assertEqual(Decimal(res.data['subtotal']), Decimal('9750.00'))
         self.assertEqual(Decimal(res.data['tax_amount']), Decimal('1755.00'))
         self.assertEqual(Decimal(res.data['total_amount']), Decimal('11505.10'))
+
+    def test_freight_charges_add_to_total_and_are_stored(self):
+        res = self.post(self.payload([
+            {'product_id': self.tap.id, 'quantity': '1', 'unit_price': '1087'},
+        ], round_off='0.10', freight_charges='250'))
+        self.assertEqual(res.status_code, 201, res.data)
+        # 1087 + GST 18% (195.66) + round 0.10 + freight 250 = 1532.76
+        self.assertEqual(Decimal(res.data['freight_charges']), Decimal('250.00'))
+        self.assertEqual(Decimal(res.data['total_amount']), Decimal('1532.76'))
 
     def test_invalid_item_rolls_back_everything(self):
         res = self.post(self.payload([

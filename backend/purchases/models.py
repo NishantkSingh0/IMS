@@ -46,6 +46,7 @@ class PurchaseInvoice(ImmutableModel):
     subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     tax_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     round_off = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    freight_charges = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     notes = models.TextField(blank=True)

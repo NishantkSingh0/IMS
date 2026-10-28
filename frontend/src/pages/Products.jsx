@@ -29,6 +29,7 @@ const Products = () => {
     current_stock: '',
     min_stock_level: '10',
     gst_rate: '18',
+    wastage_percent: '0',
     unit: 'pcs',
     description: '',
   });
@@ -143,7 +144,8 @@ const Products = () => {
       // Convert gst_rate to number before sending to backend
       const submissionData = {
         ...formData,
-        gst_rate: parseFloat(formData.gst_rate) || 18
+        gst_rate: parseFloat(formData.gst_rate) || 18,
+        wastage_percent: formData.wastage_percent === '' ? null : parseFloat(formData.wastage_percent),
       };
 
       if (editingProduct) {
@@ -173,6 +175,7 @@ const Products = () => {
       current_stock: product.current_stock,
       min_stock_level: product.min_stock_level,
       gst_rate: String(product.gst_rate || 18),
+      wastage_percent: product.wastage_percent === null || product.wastage_percent === undefined ? '' : String(product.wastage_percent),
       unit: product.unit,
       description: product.description || '',
     });
@@ -213,6 +216,7 @@ const Products = () => {
       current_stock: '',
       min_stock_level: '10',
       gst_rate: '18',
+      wastage_percent: '0',
       unit: 'pcs',
       description: '',
     });
@@ -668,6 +672,23 @@ const Products = () => {
                     max="28"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Wastage %
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.wastage_percent}
+                    onChange={(e) => setFormData({ ...formData, wastage_percent: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Not set"
+                    title="Added on top of cost price when issuing to departments"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                  />
+                </div>
+                <div></div>
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description

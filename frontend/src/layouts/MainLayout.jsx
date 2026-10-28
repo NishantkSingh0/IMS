@@ -27,7 +27,7 @@ const managerNavigation = [
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -142,7 +142,7 @@ const MainLayout = () => {
             {/* Clicking the empty area below the menu collapses/expands the sidebar (desktop) */}
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="hidden lg:flex flex-1 w-full items-end justify-center pb-2 text-gray-300 hover:text-gray-500 transition-colors"
+              className="hidden lg:flex flex-1 w-full items-end justify-center pb-2 text-white hover:text-gray-300 transition-colors"
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? <FiChevronsRight className="w-5 h-5" /> : <FiChevronsLeft className="w-5 h-5" />}

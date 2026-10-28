@@ -32,7 +32,7 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'inward_number', 'supplier', 'supplier_name', 'supplier_gstin',
             'supplier_invoice_number', 'supplier_invoice_date', 'po_number',
-            'subtotal', 'tax_amount', 'round_off', 'total_amount', 'notes',
+            'subtotal', 'tax_amount', 'round_off', 'freight_charges', 'total_amount', 'notes',
             'created_by', 'created_by_name', 'created_at', 'items'
         ]
         read_only_fields = fields
@@ -61,6 +61,8 @@ class NewProductSerializer(serializers.Serializer):
     unit = CaseInsensitiveChoiceField(choices=Product.UNIT_CHOICES)
     hsn_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
     gst_rate = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=Decimal('0'), max_value=Decimal('100'))
+    # Required for every new product (it is saved to the product for outward pricing)
+    wastage_percent = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=Decimal('0'), max_value=Decimal('100'))
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.filter(is_active=True),
         error_messages={'required': 'Select a category for the new product.', 'null': 'Select a category for the new product.'},
@@ -89,13 +91,18 @@ class PurchaseItemCreateSerializer(serializers.Serializer):
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.filter(is_active=True), source='category', required=False, allow_null=True
     )
+    # Only used for an existing product that has no wastage % yet; it is saved to the product
+    wastage_percent = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=Decimal('0'), max_value=Decimal('100'), required=False)
 
     def validate(self, data):
         product = data.get('product')
         if bool(product) == bool(data.get('new_product')):
             raise serializers.ValidationError("Provide either an existing product or a new product for each item.")
-        if product and not product.category_id and not data.get('category'):
-            raise serializers.ValidationError({'category_id': [f'Select a category for "{product.name}".']})
+        if product:
+            if not product.category_id and not data.get('category'):
+                raise serializers.ValidationError({'category_id': [f'Select a category for "{product.name}".']})
+            if product.wastage_percent is None and data.get('wastage_percent') is None:
+                raise serializers.ValidationError({'wastage_percent': [f'Set the wastage % for "{product.name}".']})
         return data
 
 
@@ -107,6 +114,7 @@ class PurchaseInvoiceCreateSerializer(serializers.Serializer):
     supplier_invoice_date = serializers.DateField()
     po_number = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
     round_off = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=Decimal('-10'), max_value=Decimal('10'), default=Decimal('0'))
+    freight_charges = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal('0'), max_value=Decimal('1000000'), default=Decimal('0'))
     notes = serializers.CharField(max_length=1000, required=False, allow_blank=True, default='')
     items = PurchaseItemCreateSerializer(many=True)
 

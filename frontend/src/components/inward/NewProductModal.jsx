@@ -5,7 +5,7 @@ import CategorySelect from './CategorySelect';
 
 /** Collects details for a product that does not exist yet; it is created when the inward is submitted. */
 const NewProductModal = ({ initialName, categories, onClose, onSave }) => {
-  const [form, setForm] = useState({ name: initialName || '', category: '', unit: 'pcs', gst_rate: '18' });
+  const [form, setForm] = useState({ name: initialName || '', category: '', unit: 'pcs', gst_rate: '18', wastage_percent: '0' });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,7 +49,7 @@ const NewProductModal = ({ initialName, categories, onClose, onSave }) => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Unit *</label>
               <select
@@ -72,6 +72,20 @@ const NewProductModal = ({ initialName, categories, onClose, onSave }) => {
                 step="0.01"
                 value={form.gst_rate}
                 onChange={(e) => setForm({ ...form, gst_rate: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Wastage % *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                max="100"
+                step="0.01"
+                value={form.wastage_percent}
+                onChange={(e) => setForm({ ...form, wastage_percent: e.target.value })}
+                title="Added on top of cost price when issuing to departments"
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>

@@ -12,8 +12,11 @@ import { calculateTotals, firstErrorMessage, formatCurrency, lineAmount } from '
 
 let rowKey = 0;
 const emptyRow = () => ({
-  key: ++rowKey, query: '', product: null, newProduct: null, category_id: '', quantity: '', unit_price: '', tax_rate: '',
+  key: ++rowKey, query: '', product: null, newProduct: null, category_id: '', quantity: '', unit_price: '', tax_rate: '', wastage_percent: '',
 });
+
+// First inward of a product asks its wastage % once; it is then saved to the product
+const needsWastage = (row) => Boolean(row.product && row.product.wastage_percent === null);
 
 // Existing product without a category: the user must pick one (it is saved to the product)
 const needsCategory = (row) => Boolean(row.product && !row.product.category);
@@ -30,6 +33,7 @@ const NewInward = ({ onClose, onCreated }) => {
   const [poNumber, setPoNumber] = useState('');
   const [rows, setRows] = useState([emptyRow()]);
   const [roundOff, setRoundOff] = useState('');
+  const [freight, setFreight] = useState('');
   const [notes, setNotes] = useState('');
   const [categories, setCategories] = useState([]);
 
@@ -71,7 +75,7 @@ const NewInward = ({ onClose, onCreated }) => {
       ? duplicateCheck
       : null;
 
-  const totals = calculateTotals(rows, roundOff);
+  const totals = calculateTotals(rows, roundOff, freight);
 
   const searchSuppliers = async (query) => {
     const response = await inventoryAPI.getSuppliers({ search: query, is_active: true });
@@ -129,6 +133,7 @@ const NewInward = ({ onClose, onCreated }) => {
       const row = filledRows[i];
       if (!row.product && !row.newProduct) return `Item ${i + 1}: select a product from the suggestions`;
       if (needsCategory(row) && !row.category_id) return `Item ${i + 1}: select a category`;
+      if (needsWastage(row) && (row.wastage_percent === '' || parseFloat(row.wastage_percent) < 0 || parseFloat(row.wastage_percent) > 100)) return `Item ${i + 1}: set the wastage %`;
       if (row.newProduct && !row.newProduct.category) return `Item ${i + 1}: select a category`;
       if (!(parseFloat(row.quantity) > 0)) return `Item ${i + 1}: enter a quantity`;
       if (!(parseFloat(row.unit_price) > 0)) return `Item ${i + 1}: enter the rate`;
@@ -159,10 +164,12 @@ const NewInward = ({ onClose, onCreated }) => {
         supplier_invoice_date: invoiceDate,
         po_number: poNumber.trim(),
         round_off: (parseFloat(roundOff) || 0).toFixed(2),
+        freight_charges: (parseFloat(freight) || 0).toFixed(2),
         notes: notes.trim(),
         items: filledRows.map((row) => ({
           ...(row.product ? { product_id: row.product.id } : { new_product: row.newProduct }),
           ...(needsCategory(row) ? { category_id: Number(row.category_id) } : {}),
+          ...(needsWastage(row) ? { wastage_percent: row.wastage_percent } : {}),
           quantity: row.quantity,
           unit_price: row.unit_price,
           tax_rate: row.tax_rate,
@@ -287,6 +294,7 @@ const NewInward = ({ onClose, onCreated }) => {
                     <th className="pb-2 w-10">#</th>
                     <th className="pb-2">Item Name</th>
                     <th className="pb-2 w-44">Category</th>
+                    <th className="pb-2 w-24">Wastage %</th>
                     <th className="pb-2 w-28">Qty</th>
                     <th className="pb-2 w-16">Unit</th>
                     <th className="pb-2 w-32">Rate</th>
@@ -362,6 +370,27 @@ const NewInward = ({ onClose, onCreated }) => {
                           )}
                         </td>
                         <td className="py-3 pr-3">
+                          {needsWastage(row) ? (
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              required
+                              placeholder="e.g. 5"
+                              value={row.wastage_percent}
+                              onChange={(e) => updateRow(row.key, { wastage_percent: e.target.value })}
+                              className={`${inputClass} ${row.wastage_percent === '' ? 'border-orange-400' : ''}`}
+                            />
+                          ) : (
+                            <p className="text-sm text-gray-600 pt-2">
+                              {row.product?.wastage_percent !== null && row.product?.wastage_percent !== undefined
+                                ? `${row.product.wastage_percent}%`
+                                : row.newProduct ? `${row.newProduct.wastage_percent}%` : '-'}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-3 pr-3">
                           <input
                             type="number"
                             min="0.01"
@@ -431,6 +460,18 @@ const NewInward = ({ onClose, onCreated }) => {
               <div className="flex justify-between">
                 <span className="text-gray-500">GST</span>
                 <span className="text-gray-900">{formatCurrency(totals.tax)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Freight / Additional Charges</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={freight}
+                  onChange={(e) => setFreight(e.target.value)}
+                  placeholder="Optional"
+                  className="w-28 px-3 py-1.5 text-sm text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                />
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Round Off</span>

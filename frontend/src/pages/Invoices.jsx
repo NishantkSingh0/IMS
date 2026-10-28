@@ -493,6 +493,11 @@ const Invoices = () => {
                         </td>
                         <td className="px-4 py-3 text-right text-gray-600">
                           {formatCurrency(item.unit_price)}
+                          {parseFloat(item.wastage_percent) > 0 && (
+                            <span className="block text-xs text-orange-600">
+                              +{formatCurrency(item.wastage_amount)} wastage ({item.wastage_percent}%)
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-gray-900">
                           {formatCurrency(item.total)}
@@ -517,10 +522,6 @@ const Invoices = () => {
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Tax (GST)</span>
-                  <span className="text-gray-900">{formatCurrency(selectedInvoice.tax_amount)}</span>
-                </div>
                 <div className="flex justify-between pt-2 border-t text-lg font-bold">
                   <span>Total</span>
                   <span className="text-primary-600">

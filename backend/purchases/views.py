@@ -95,7 +95,7 @@ class PurchaseInvoiceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, m
         columns = [
             'Inward No', 'Inward At', 'Vendor', 'GSTIN/UIN', 'Invoice No', 'Invoice Date', 'PO No',
             'Product SKU', 'Product Name', 'Category', 'Quantity', 'Unit', 'Rate', 'GST (%)', 'GST Amount',
-            'Amount', 'Price Change', 'Inward By',
+            'Amount', 'Price Change', 'Freight Charges', 'Inward By',
         ]
         data = []
         for purchase in purchases:
@@ -118,6 +118,7 @@ class PurchaseInvoiceViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, m
                     'GST Amount': float(item.tax_amount),
                     'Amount': float(item.total),
                     'Price Change': 'Yes' if item.is_price_change else 'No',
+                    'Freight Charges': float(purchase.freight_charges),
                     'Inward By': purchase.created_by.get_full_name() if purchase.created_by else '',
                 })
 

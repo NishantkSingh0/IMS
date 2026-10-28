@@ -65,6 +65,7 @@ def _resolve_stock_product(selected, unit_price, tax_rate, locked):
         unit=base.unit,
         gst_rate=tax_rate,
         hsn_code=base.hsn_code,
+        wastage_percent=base.wastage_percent,
     )
     locked[variant.pk] = variant
     return variant, True
@@ -88,6 +89,7 @@ def _create_new_product(data, unit_price):
         unit=data['unit'],
         hsn_code=data.get('hsn_code', ''),
         gst_rate=data['gst_rate'],
+        wastage_percent=data['wastage_percent'],
         cost_price=unit_price,
         current_stock=0,
     )
@@ -112,6 +114,10 @@ def create_purchase_invoice(user, data):
         if item.get('product'):
             selected = locked[item['product'].pk]
             _fill_missing_category(selected, item.get('category'), locked)
+            # First inward of this product: capture its wastage % once (saved to the product)
+            if selected.wastage_percent is None and item.get('wastage_percent') is not None:
+                selected.wastage_percent = item['wastage_percent']
+                selected.save(update_fields=['wastage_percent', 'updated_at'])
             tax_rate = item.get('tax_rate', selected.gst_rate)
             product, is_price_change = _resolve_stock_product(selected, unit_price, tax_rate, locked)
         else:
@@ -138,6 +144,7 @@ def create_purchase_invoice(user, data):
     subtotal = money(sum(taxable_by_rate.values()))
     tax_amount = money(sum(money(amount * rate / 100) for rate, amount in taxable_by_rate.items()))
     round_off = data.get('round_off', Decimal('0'))
+    freight = data.get('freight_charges', Decimal('0'))
 
     try:
         with transaction.atomic():
@@ -151,7 +158,8 @@ def create_purchase_invoice(user, data):
                 subtotal=subtotal,
                 tax_amount=tax_amount,
                 round_off=round_off,
-                total_amount=subtotal + tax_amount + round_off,
+                freight_charges=freight,
+                total_amount=subtotal + tax_amount + round_off + freight,
                 notes=data.get('notes', ''),
                 created_by=user,
             )

@@ -99,6 +99,8 @@ class Product(models.Model):
 
     # Pricing
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
+    # Outward rate uplift collected on the first inward of this product (null = not set yet, 0 = none)
+    wastage_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
     # Stock
     current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -75,6 +75,9 @@ class InvoiceItem(models.Model):
     
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    # Snapshot of the product's outward uplift (cost + wastage%) at slip time
+    wastage_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    wastage_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
     tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)

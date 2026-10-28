@@ -276,25 +276,21 @@ const Billing = () => {
     return cart.some(item => item.product.category_name === 'CONSUMABLE');
   };
 
+  // Outward rate includes the product's wastage uplift (GST is not charged on issues)
+  const effectiveRate = (product) =>
+    parseFloat(((product.cost_price * (1 + (parseFloat(product.wastage_percent) || 0) / 100))).toFixed(2));
+
   const calculateSubtotal = () => {
     return cart.reduce(
-      (sum, item) => sum + item.product.cost_price * item.quantity - item.discount,
+      (sum, item) => sum + effectiveRate(item.product) * item.quantity - item.discount,
       0
     );
   };
 
-  const calculateTax = () => {
-    return cart.reduce((sum, item) => {
-      const itemTotal = item.product.cost_price * item.quantity - item.discount;
-      return sum + itemTotal * (item.product.gst_rate || 18) / 100;
-    }, 0);
-  };
-
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const tax = calculateTax();
     const discountAmount = subtotal * (discount / 100);
-    return subtotal + tax - discountAmount;
+    return subtotal - discountAmount;
   };
 
   const handleCheckout = async () => {
@@ -336,7 +332,6 @@ const Billing = () => {
         items: cart.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
-          unit_price: item.product.cost_price,
           discount: item.discount,
         })),
         discount_percentage: discount,
@@ -409,8 +404,13 @@ const Billing = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
-                        {formatCurrency(product.cost_price)}
+                        {formatCurrency(effectiveRate(product))}
                       </p>
+                      {parseFloat(product.wastage_percent) > 0 && (
+                        <p className="text-xs text-orange-600">
+                          incl. wastage +{formatCurrency(effectiveRate(product) - product.cost_price)}/unit
+                        </p>
+                      )}
                       <p className={`text-sm ${product.current_stock > (product.min_stock_level || 10) ? 'text-green-600' : 'text-orange-600'}`}>
                         Stock: {product.current_stock}
                       </p>
@@ -451,6 +451,11 @@ const Billing = () => {
                           Consumable
                         </span>
                       )}
+                      {parseFloat(item.product.wastage_percent) > 0 && (
+                        <p className="text-xs text-orange-600">
+                          incl. wastage +{formatCurrency(effectiveRate(item.product) - item.product.cost_price)}/unit ({item.product.wastage_percent}%)
+                        </p>
+                      )}
                     </td>
                     <td className="py-3">
                       <div className="flex items-center justify-center space-x-2">
@@ -479,10 +484,10 @@ const Billing = () => {
                       </div>
                     </td>
                     <td className="py-3 text-right text-gray-900">
-                      {formatCurrency(item.product.cost_price)}
+                      {formatCurrency(effectiveRate(item.product))}
                     </td>
                     <td className="py-3 text-right font-medium text-gray-900">
-                      {formatCurrency(item.product.cost_price * item.quantity - item.discount)}
+                      {formatCurrency(effectiveRate(item.product) * item.quantity - item.discount)}
                     </td>
                     <td className="py-3 text-right">
                       <button
@@ -630,10 +635,6 @@ const Billing = () => {
             <div className="flex justify-between">
               <span className="text-gray-500">Subtotal</span>
               <span className="text-gray-900">{formatCurrency(calculateSubtotal())}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Tax (GST)</span>
-              <span className="text-gray-900">{formatCurrency(calculateTax())}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Discount</span>

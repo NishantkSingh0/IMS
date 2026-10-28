@@ -14,8 +14,8 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         model = InvoiceItem
         fields = [
             'id', 'product', 'product_name', 'product_sku',
-            'quantity', 'unit', 'unit_price', 'discount', 'tax_rate',
-            'tax_amount', 'total'
+            'quantity', 'unit', 'unit_price', 'wastage_percent', 'wastage_amount',
+            'discount', 'tax_rate', 'tax_amount', 'total'
         ]
         read_only_fields = ['tax_amount', 'total']
 
@@ -155,8 +155,11 @@ class InvoiceCreateSerializer(serializers.Serializer):
                     f"Insufficient stock for {product.name}. Available: {product.current_stock}"
                 )
 
-            # Create invoice item
-            unit_price = item_data.get('unit_price', product.cost_price)
+            # Outward rate is computed server-side: cost price + wastage uplift (GST is not charged on issues)
+            wastage = product.wastage_percent or Decimal('0')
+            base_price = product.cost_price
+            unit_price = (base_price * (1 + wastage / 100)).quantize(Decimal('0.01'))
+            wastage_amount = ((unit_price - base_price) * item_data['quantity']).quantize(Decimal('0.01'))
             InvoiceItem.objects.create(
                 invoice=invoice,
                 product=product,
@@ -164,8 +167,10 @@ class InvoiceCreateSerializer(serializers.Serializer):
                 product_sku=product.sku,
                 quantity=item_data['quantity'],
                 unit_price=unit_price,
+                wastage_percent=wastage,
+                wastage_amount=wastage_amount,
                 discount=item_data.get('discount', 0),
-                tax_rate=product.gst_rate
+                tax_rate=Decimal('0')
             )
 
             # Update stock
