@@ -159,9 +159,15 @@ class ProductSerializer(serializers.ModelSerializer):
 
     # Shown disabled in the edit form; the API enforces the same restriction
     LOCKED_ON_UPDATE = ('name', 'sku', 'unit', 'cost_price', 'gst_rate', 'current_stock')
+    # Owners/managers may silently correct these directly (no stock movement/history recorded)
+    MANAGER_EDITABLE = ('unit', 'cost_price', 'gst_rate', 'current_stock')
 
     def update(self, instance, validated_data):
+        request = self.context.get('request')
+        can_adjust = getattr(getattr(request, 'user', None), 'role', None) in ('owner', 'manager')
         for field in self.LOCKED_ON_UPDATE:
+            if can_adjust and field in self.MANAGER_EDITABLE:
+                continue
             incoming = validated_data.pop(field, None)
             if incoming is not None and incoming != getattr(instance, field):
                 raise serializers.ValidationError({
@@ -193,6 +199,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
         if min_stock is not None and min_stock < 0:
             raise serializers.ValidationError("Minimum stock level cannot be negative")
+
+        current_stock = data.get('current_stock')
+        if current_stock is not None and current_stock < 0:
+            raise serializers.ValidationError({'current_stock': ["Current stock cannot be negative"]})
 
         return data
 

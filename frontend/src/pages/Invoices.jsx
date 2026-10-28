@@ -295,7 +295,7 @@ const Invoices = () => {
         ) : invoices.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">
             <FiFileText className="w-16 h-16 mb-4" />
-            <p className="text-lg">No invoices found</p>
+            <p className="text-lg">No Slips found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Products = () => {
   const { user } = useAuth();
+  const canAdjust = user?.role === 'owner' || user?.role === 'manager';
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,17 +129,6 @@ const Products = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Prevent stock from being decreased while editing
-    if (
-      editingProduct &&
-      Number(formData.current_stock) < Number(editingProduct.current_stock)
-    ) {
-      toast.error(
-        `Stock cannot be decreased. Current stock is ${editingProduct.current_stock} ${editingProduct.unit}.`
-      );
-      return;
-    }
 
     try {
       // Convert gst_rate to number before sending to backend
@@ -588,11 +578,11 @@ const Products = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit*</label>
                   <select
-                    disabled={editingProduct !== null}
+                    disabled={editingProduct !== null && !canAdjust}
                     required
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct && !canAdjust ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     <option value="pcs">Pieces</option>
                     <option value="kg">Kilograms</option>
@@ -609,10 +599,10 @@ const Products = () => {
                   </label>
                   <input
                     type="number"
-                    disabled={editingProduct !== null}
+                    disabled={editingProduct !== null && !canAdjust}
                     value={formData.cost_price}
                     onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct && !canAdjust ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     required
                     min="0"
                     step="0.01"
@@ -625,7 +615,7 @@ const Products = () => {
 
                   <input
                     type="number"
-                    disabled={editingProduct !== null}
+                    disabled={editingProduct !== null && !canAdjust}
                     value={formData.current_stock}
                     onChange={(e) =>
                       setFormData({
@@ -633,12 +623,13 @@ const Products = () => {
                         current_stock: e.target.value
                       })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct && !canAdjust ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     required
                     min="0"
+                    step="0.01"
                   />
 
-                  {editingProduct && (
+                  {editingProduct && !canAdjust && (
                     <p className="mt-1 text-xs text-gray-500">
                       Stock changes only through inwards and outwards.
                     </p>
@@ -664,10 +655,10 @@ const Products = () => {
                   <input
                     required
                     type="number"
-                    disabled={editingProduct !== null}
+                    disabled={editingProduct !== null && !canAdjust}
                     value={formData.gst_rate}
                     onChange={(e) => setFormData({ ...formData, gst_rate: e.target.value })}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct && !canAdjust ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     min="0"
                     max="28"
                   />

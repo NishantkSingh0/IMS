@@ -469,7 +469,7 @@ const NewInward = ({ onClose, onCreated }) => {
                   min="0"
                   value={freight}
                   onChange={(e) => setFreight(e.target.value)}
-                  placeholder="Optional"
+                  placeholder="if present"
                   className="w-28 px-3 py-1.5 text-sm text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>

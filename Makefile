@@ -4,6 +4,7 @@
 PY       = backend/venv/bin/python
 MANAGE   = $(PY) backend/manage.py
 
+
 .PHONY: api redis migrations seed web test lint build
 
 # Django API on :8000
