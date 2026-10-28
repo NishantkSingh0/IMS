@@ -4,17 +4,7 @@ import { salesAPI } from '../services/api';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import {
-  FiSearch,
-  FiEye,
-  FiPrinter,
-  FiX,
-  FiFileText,
-  FiFilter,
-  FiCalendar,
-  FiRefreshCw,
-  FiDownload,
-} from 'react-icons/fi';
+import { FiSearch, FiEye, FiPrinter, FiX, FiFileText, FiFilter, FiCalendar, FiRefreshCw, FiDownload } from 'react-icons/fi';
 
 const Invoices = () => {
   const { user } = useAuth();
