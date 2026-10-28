@@ -171,6 +171,7 @@ class InvoiceCreateSerializer(serializers.Serializer):
             # Update stock
             previous_stock = product.current_stock
             product.current_stock -= item_data['quantity']
+            product.last_movement_at = invoice.created_at
             product.save()
 
             # Create stock transaction
@@ -182,6 +183,7 @@ class InvoiceCreateSerializer(serializers.Serializer):
                 new_stock=product.current_stock,
                 unit_price=unit_price,
                 reference=invoice.invoice_number,
+                outward=invoice,
                 performed_by=user
             )
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers, FiMaximize, FiMinimize, FiTruck } from 'react-icons/fi';
+import { FiHome, FiShoppingCart, FiPackage, FiFileText, FiBriefcase, FiBox, FiMenu, FiX, FiLogOut, FiUser, FiTrendingUp, FiUsers, FiMaximize, FiMinimize, FiTruck, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 
 const ownerNavigation = [
   { name: 'Dashboard', href: '/', icon: FiHome },
@@ -27,6 +27,7 @@ const managerNavigation = [
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -86,23 +87,23 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-all duration-300 ease-in-out lg:translate-x-0 ${
+          collapsed ? 'lg:w-20' : 'lg:w-64'
+        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full min-h-0">
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center justify-between h-16 px-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="w-8 h-8 ml-2 rounded-lg overflow-hidden flex items-center justify-center">
                 <img
                   src="/logo.png"
                   alt="BMS Logo"
                   className="w-full h-full object-contain"
                 />              
               </div>
-             <div>
+             <div className={collapsed ? 'lg:hidden' : ''}>
                 <h1 className="text-black font-bold text-lg">IMS</h1>
                 <p className="text-gray-800 text-xs capitalize">{user?.role} Dashboard</p>
               </div>
@@ -117,13 +118,16 @@ const MainLayout = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 min-h-0 px-2 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 min-h-0 px-2 py-4 space-y-1 overflow-y-auto lg:flex lg:flex-col">
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
+                title={item.name}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    collapsed ? 'lg:justify-center lg:px-0' : ''
+                  } ${
                     isActive
                       ? 'bg-gray-200 text-black'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -131,10 +135,18 @@ const MainLayout = () => {
                 }
                 onClick={() => setSidebarOpen(false)}
               >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <item.icon className={`w-5 h-5 ${collapsed ? 'lg:mr-0' : ''} mr-3`} />
+                <span className={collapsed ? 'lg:hidden' : ''}>{item.name}</span>
               </NavLink>
             ))}
+            {/* Clicking the empty area below the menu collapses/expands the sidebar (desktop) */}
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="hidden lg:flex flex-1 w-full items-end justify-center pb-2 text-gray-300 hover:text-gray-500 transition-colors"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <FiChevronsRight className="w-5 h-5" /> : <FiChevronsLeft className="w-5 h-5" />}
+            </button>
           </nav>
 
           {/* User section - always at bottom */}
@@ -146,7 +158,7 @@ const MainLayout = () => {
                 </div>
               </div>
 
-              <div className="ml-3 flex-1 min-w-0">
+              <div className={`ml-3 flex-1 min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
                 <p className="text-sm font-medium text-gray-700 truncate">
                   {user?.full_name || 'User'}
                 </p>
@@ -155,13 +167,13 @@ const MainLayout = () => {
                 </p>
               </div>
 
-              <button
+              {!collapsed && <button
                 onClick={handleLogout}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
                 title="Logout"
               >
                 <FiLogOut className="w-5 h-5" />
-              </button>
+              </button>}
             </div>
           </div>
 
@@ -169,7 +181,7 @@ const MainLayout = () => {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         {/* Top navbar */}
         <header className="sticky top-0 z-30 bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4">

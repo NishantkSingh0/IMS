@@ -16,7 +16,8 @@ const Inwards = () => {
   const [inwards, setInwards] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Navigation can pre-fill the search box (e.g. from a product's stock history)
+  const [searchQuery, setSearchQuery] = useState(() => location.state?.search || '');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
@@ -48,7 +49,7 @@ const Inwards = () => {
   }, [refreshKey]);
 
   useEffect(() => {
-    if (location.state?.openNewInward) navigate(location.pathname, { replace: true, state: null });
+    if (location.state?.openNewInward || location.state?.search) navigate(location.pathname, { replace: true, state: null });
   }, [location.state, location.pathname, navigate]);
 
   const handleInwardCreated = (id) => {
@@ -126,7 +127,7 @@ const Inwards = () => {
               className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800"
             >
               <FiDownload className="w-4 h-4" />
-              Export Excel
+              Export Filter
             </button>
           )}
 
@@ -142,21 +143,57 @@ const Inwards = () => {
 
 
       {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            ['Total Inwards', stats.total_inwards],
-            ['Total Value', formatCurrency(stats.total_value)],
-            ['This Month', stats.month_inwards],
-            ['This Month Value', formatCurrency(stats.month_value)],
-          ].map(([label, value]) => (
-            <div key={label} className="bg-white rounded-xl shadow-sm p-4">
-              <p className="text-sm text-gray-500">{label}</p>
-              <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
-            </div>
-          ))}
+
+{stats && (
+  <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+    {/* Overall Statistics */}
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">
+        Overall Overview
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <p className="text-sm text-gray-500">Total Inwards</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">
+            {stats.total_inwards}
+          </p>
         </div>
-      )}
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <p className="text-sm text-gray-500">Total Value</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">
+            {formatCurrency(stats.total_value)}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Monthly Statistics */}
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">
+        Monthly Overview
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <p className="text-sm text-gray-500">Inwards This Month</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">
+            {stats.month_inwards}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <p className="text-sm text-gray-500">This Month Value</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">
+            {formatCurrency(stats.month_value)}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">

@@ -148,13 +148,26 @@ class ProductSerializer(serializers.ModelSerializer):
             'cost_price',
             'current_stock', 'min_stock_level', 'unit',
             'gst_rate', 'hsn_code', 'parent_product',
-            'is_low_stock', 'stock_value',
+            'is_low_stock', 'stock_value', 'last_movement_at',
             'created_at', 'updated_at'
         ]
         extra_kwargs = {
             'sku': {'required': False, 'allow_blank': True},
             'parent_product': {'read_only': True},
+            'last_movement_at': {'read_only': True},
         }
+
+    # Shown disabled in the edit form; the API enforces the same restriction
+    LOCKED_ON_UPDATE = ('name', 'sku', 'unit', 'cost_price', 'gst_rate', 'current_stock')
+
+    def update(self, instance, validated_data):
+        for field in self.LOCKED_ON_UPDATE:
+            incoming = validated_data.pop(field, None)
+            if incoming is not None and incoming != getattr(instance, field):
+                raise serializers.ValidationError({
+                    field: [f"{field.replace('_', ' ')} cannot be changed once the product exists."]
+                })
+        return super().update(instance, validated_data)
 
     def validate_name(self, value):
         if not value or not value.strip():
@@ -195,7 +208,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'sku', 'name', 'tally_name', 'category', 'category_name',
             'cost_price', 'current_stock', 'min_stock_level', 'unit', 'gst_rate', 'hsn_code',
-            'parent_product', 'is_low_stock'
+            'parent_product', 'is_low_stock', 'last_movement_at'
         ]
 
 
@@ -213,6 +226,45 @@ class StockTransactionSerializer(serializers.ModelSerializer):
             'reference', 'notes', 'performed_by', 'performed_by_name', 'created_at'
         ]
         read_only_fields = ['previous_stock', 'new_stock', 'performed_by']
+
+
+class StockHistorySerializer(serializers.ModelSerializer):
+    """Inward (+) / outward (-) movement of a product with the linked document details."""
+
+    movement = serializers.SerializerMethodField()
+    change = serializers.SerializerMethodField()
+    stock_before = serializers.DecimalField(source='previous_stock', max_digits=10, decimal_places=2, read_only=True)
+    stock_after = serializers.DecimalField(source='new_stock', max_digits=10, decimal_places=2, read_only=True)
+    inward_number = serializers.CharField(source='purchase.inward_number', default='', read_only=True)
+    vendor_invoice_number = serializers.CharField(source='purchase.supplier_invoice_number', default='', read_only=True)
+    vendor_name = serializers.CharField(source='purchase.supplier_name', default='', read_only=True)
+    po_number = serializers.CharField(source='purchase.po_number', default='', read_only=True)
+    slip_number = serializers.SerializerMethodField()
+    department_name = serializers.CharField(source='outward.department.name', default='', read_only=True)
+    project_name = serializers.CharField(source='outward.project_name', default='', read_only=True)
+    recorded_by = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockTransaction
+        fields = [
+            'id', 'created_at', 'movement', 'change', 'stock_before', 'stock_after', 'unit_price',
+            'inward_number', 'vendor_invoice_number', 'vendor_name', 'po_number',
+            'slip_number', 'department_name', 'project_name', 'recorded_by',
+        ]
+
+    def get_movement(self, obj):
+        return 'inward' if obj.transaction_type == 'in' else 'outward'
+
+    def get_change(self, obj):
+        return str(obj.quantity if obj.transaction_type == 'in' else -obj.quantity)
+
+    def get_slip_number(self, obj):
+        if obj.transaction_type != 'sale':
+            return ''
+        return obj.outward.invoice_number if obj.outward else obj.reference
+
+    def get_recorded_by(self, obj):
+        return obj.performed_by.get_full_name() if obj.performed_by else ''
 
 
 class StockAdjustmentSerializer(serializers.Serializer):

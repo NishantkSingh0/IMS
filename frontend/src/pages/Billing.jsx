@@ -662,9 +662,6 @@ const Billing = () => {
 
         {/* Checkout Buttons */}
         <div className="p-4 border-t space-y-3">
-          <p className="text-xs flex items-center justify-center">
-            Each Transaction is Recorded and Accessible to Admin
-          </p>
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || !selectedDepartment || (hasNonConsumableItems() && !selectedProject) || (hasAnyConsumableItems() && hasNonConsumableItems()) || loading}

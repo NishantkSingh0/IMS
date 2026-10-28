@@ -135,6 +135,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         invoice = serializer.save()
+        cache.delete_many(['products_list_page1', 'inventory_stats'])
         return Response(
             InvoiceSerializer(invoice, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED

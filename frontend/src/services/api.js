@@ -220,6 +220,7 @@ export const inventoryAPI = {
   getOutOfStock: () => api.get('/inventory/products/out_of_stock/'),
   getStats: () => api.get('/inventory/products/stats/'),
   adjustStock: (id, data) => api.post(`/inventory/products/${id}/adjust_stock/`, data),
+  getProductHistory: (id, params) => api.get(`/inventory/products/${id}/history/`, { params }),
   
   getCategories: () => api.get('/inventory/categories/'),
   getSuppliers: (params) => api.get('/inventory/suppliers/', { params }),

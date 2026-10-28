@@ -4,19 +4,31 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.db.models import Sum, F
+from django.db.models import Count, Q, Sum, F
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 import pandas as pd
+from .history import HISTORY_TYPES, history_cutoff, prune_if_due
 from .models import Category, Supplier, Department, Product, StockTransaction, LowStockAlert
 from .serializers import (
     CategorySerializer, SupplierSerializer, SupplierListSerializer,
     DepartmentSerializer, DepartmentListSerializer,
     ProductSerializer, ProductListSerializer, StockTransactionSerializer,
-    StockAdjustmentSerializer, LowStockAlertSerializer
+    StockAdjustmentSerializer, LowStockAlertSerializer, StockHistorySerializer
 )
+
+
+def filter_by_date_range(queryset, field, params, from_key, to_key):
+    """Filter a queryset by a local-date range given as YYYY-MM-DD query params (invalid values are ignored)."""
+    date_from, date_to = parse_date(params.get(from_key) or ''), parse_date(params.get(to_key) or '')
+    if date_from:
+        queryset = queryset.filter(**{f'{field}__date__gte': date_from})
+    if date_to:
+        queryset = queryset.filter(**{f'{field}__date__lte': date_to})
+    return queryset
 
 
 class IsOwner(permissions.BasePermission):
@@ -227,8 +239,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'unit']
     search_fields = ['name', 'tally_name', 'sku', 'description']
-    ordering_fields = ['name', 'current_stock', 'created_at']
+    ordering_fields = ['name', 'current_stock', 'created_at', 'last_movement_at']
     ordering = ['name']
+
+    def get_queryset(self):
+        # "Last updated" = latest inward/outward date
+        return filter_by_date_range(super().get_queryset(), 'last_movement_at', self.request.query_params, 'updated_from', 'updated_to')
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -236,13 +252,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         return ProductSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'adjust_stock', 'export_excel', 'low_stock_export_excel', 'out_of_stock_export_excel']:
+        if self.action in ['create', 'destroy']:
+            return [IsOwner()]
+        if self.action in ['update', 'partial_update', 'adjust_stock', 'export_excel', 'low_stock_export_excel', 'out_of_stock_export_excel', 'history']:
             return [IsOwnerOrManager()]
         return [IsAuthenticated()]
 
     def list(self, request, *args, **kwargs):
         # Only cache unfiltered first page (no search or filters applied)
-        has_filters = any(request.query_params.get(key) for key in ['search', 'category', 'unit'])
+        has_filters = any(request.query_params.get(key) for key in ['search', 'category', 'unit', 'updated_from', 'updated_to'])
         page = request.query_params.get('page')
 
         if not has_filters and (not page or page == '1'):
@@ -509,6 +527,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 'GST_Rate (%)': float(product.gst_rate) if product.gst_rate else 0,
                 'Total_Stock_Price': float(product.current_stock * product.cost_price) if product.cost_price else 0,
                 'Low_Stock': 'Yes' if product.is_low_stock else 'No',
+                'Last_Updated': timezone.localtime(product.last_movement_at).strftime('%d-%m-%Y') if product.last_movement_at else '',
             })
 
         # Create DataFrame
@@ -532,6 +551,53 @@ class ProductViewSet(viewsets.ModelViewSet):
                 worksheet.column_dimensions[chr(64 + idx)].width = min(max_length + 2, 50)
 
         return response
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        """Inward/outward movements of a product within the retention window, with a stock summary."""
+        prune_if_due()
+        product = self.get_object()
+        movements = (
+            StockTransaction.objects
+            .filter(product=product, transaction_type__in=HISTORY_TYPES, created_at__gte=history_cutoff())
+            .select_related('purchase', 'outward__department', 'performed_by')
+            .order_by('-created_at', '-id')
+        )
+        movement = request.query_params.get('movement')
+        if movement in ('inward', 'outward'):
+            movements = movements.filter(transaction_type='in' if movement == 'inward' else 'sale')
+        movements = filter_by_date_range(movements, 'created_at', request.query_params, 'date_from', 'date_to')
+
+        totals = movements.aggregate(
+            total_in=Sum('quantity', filter=Q(transaction_type='in')),
+            total_out=Sum('quantity', filter=Q(transaction_type='sale')),
+            count=Count('id'),
+        )
+        oldest = movements.order_by('created_at', 'id').first()
+        summary = {
+            'opening_stock': oldest.previous_stock if oldest else product.current_stock,
+            'total_in': totals['total_in'] or 0,
+            'total_out': totals['total_out'] or 0,
+            'current_stock': product.current_stock,
+            'count': totals['count'],
+        }
+
+        # Paginate with the count from the aggregate above instead of counting the rows again
+        try:
+            page_number = max(1, int(request.query_params.get('page') or 1))
+        except (TypeError, ValueError):
+            page_number = 1
+        page_size = self.paginator.page_size or 20
+        start = (page_number - 1) * page_size
+        rows = list(movements[start:start + page_size])
+        return Response({
+            'count': totals['count'],
+            'next': f'?page={page_number + 1}' if start + len(rows) < totals['count'] else None,
+            'previous': f'?page={page_number - 1}' if page_number > 1 else None,
+            'results': StockHistorySerializer(rows, many=True).data,
+            'product': ProductListSerializer(product).data,
+            'summary': summary,
+        })
 
 
 class StockTransactionViewSet(viewsets.ReadOnlyModelViewSet):

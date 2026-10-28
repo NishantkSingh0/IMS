@@ -181,7 +181,8 @@ def create_purchase_invoice(user, data):
 
         previous_stock = product.current_stock
         product.current_stock = previous_stock + line['quantity']
-        product.save(update_fields=['current_stock', 'updated_at'])
+        product.last_movement_at = purchase.created_at
+        product.save(update_fields=['current_stock', 'last_movement_at', 'updated_at'])
 
         StockTransaction.objects.create(
             product=product,
@@ -192,6 +193,7 @@ def create_purchase_invoice(user, data):
             unit_price=line['unit_price'],
             reference=reference,
             notes=f"Inward from {supplier.name}",
+            purchase=purchase,
             performed_by=user,
         )
 

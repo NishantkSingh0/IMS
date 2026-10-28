@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { inventoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { FiSearch, FiPlus, FiEdit2, FiFilter, FiX, FiPackage, FiDownload, FiTrash2 } from 'react-icons/fi';
+import { format } from 'date-fns';
+import { FiSearch, FiPlus, FiEdit2, FiFilter, FiX, FiPackage, FiDownload, FiTrash2, FiClock, FiCalendar } from 'react-icons/fi';
 import ConfirmModal from '../components/ConfirmModal';
+import ProductHistoryModal from '../components/stock/ProductHistoryModal';
 import { useAuth } from '../context/AuthContext';
 
 const Products = () => {
@@ -12,6 +14,9 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [updatedFrom, setUpdatedFrom] = useState('');
+  const [updatedTo, setUpdatedTo] = useState('');
+  const [historyProduct, setHistoryProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, onConfirm: null, title: '', message: '' });
@@ -34,32 +39,55 @@ const Products = () => {
     currentPage: 1,
     totalPages: 1,
   });
-  const isInitialMount = useRef(true);
-
   useEffect(() => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    fetchProducts();
     fetchCategories();
-  }, [searchQuery, selectedCategory]);
+  }, []);
+
+  // Changing a filter always goes back to the first page; the fetch is debounced
+  const updateFilter = (setter) => (e) => {
+    setter(e.target.value);
+    setPagination((prev) => (prev.currentPage === 1 ? prev : { ...prev, currentPage: 1 }));
+  };
+  const changeSearch = updateFilter(setSearchQuery);
+  const changeCategory = updateFilter(setSelectedCategory);
+  const changeUpdatedFrom = updateFilter(setUpdatedFrom);
+  const changeUpdatedTo = updateFilter(setUpdatedTo);
+  const clearDates = () => {
+    setUpdatedFrom('');
+    setUpdatedTo('');
+    setPagination((prev) => (prev.currentPage === 1 ? prev : { ...prev, currentPage: 1 }));
+  };
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    fetchProducts();
-  }, [pagination.currentPage]);
+    let cancelled = false;
+    const timer = setTimeout(() => fetchProducts(pagination.currentPage, () => cancelled), 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedCategory, updatedFrom, updatedTo, pagination.currentPage]);
 
-  const fetchProducts = async () => {
+  // Filters shared by the product list and the Excel export
+  const filterParams = () => {
+    const params = {};
+    if (searchQuery) params.search = searchQuery;
+    if (selectedCategory) params.category = selectedCategory;
+    if (updatedFrom) params.updated_from = updatedFrom;
+    if (updatedTo) params.updated_to = updatedTo;
+    return params;
+  };
+
+  const fetchProducts = async (page = 1, isStale = () => false) => {
+    setLoading(true);
     try {
       const params = { 
-        search: searchQuery,
-        page: pagination.currentPage,
+        ...filterParams(),
+        page,
         page_size: 20
       };
-      if (selectedCategory) params.category = selectedCategory;
       
       const response = await inventoryAPI.getProducts(params);
+      if (isStale()) return;
       const data = response.data;
       
       if (data.results) {
@@ -82,9 +110,9 @@ const Products = () => {
         }));
       }
     } catch (error) {
-      toast.error('Failed to fetch products');
+      if (!isStale()) toast.error('Failed to fetch products');
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
   };
 
@@ -128,7 +156,7 @@ const Products = () => {
 
       setShowModal(false);
       resetForm();
-      fetchProducts();
+      fetchProducts(pagination.currentPage);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save product');
     }
@@ -158,7 +186,7 @@ const Products = () => {
         try {
           await inventoryAPI.deleteProduct(product.id);
           toast.success('Product deleted successfully');
-          fetchProducts();
+          fetchProducts(pagination.currentPage);
           setConfirmModal({ isOpen: false, onConfirm: null, title: '', message: '' });
         } catch (error) {
           toast.error('Failed to delete product');
@@ -192,12 +220,7 @@ const Products = () => {
 
   const handleExportExcel = async () => {
     try {
-      // Prepare filter parameters
-      const params = {};
-      if (searchQuery) params.search = searchQuery;
-      if (selectedCategory) params.category = selectedCategory;
-
-      const blob = await inventoryAPI.exportProductsExcel(params);
+      const blob = await inventoryAPI.exportProductsExcel(filterParams());
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -253,6 +276,7 @@ const Products = () => {
             <FiDownload className="w-5 h-5" />
             <span>Export Products</span>
           </button>
+          {user && user.role === 'owner' && (
           <button
             onClick={() => {
               setConfirmModal({
@@ -275,25 +299,26 @@ const Products = () => {
             <FiPlus className="w-5 h-5" />
             <span>Add Product</span>
           </button>
+          )}
         </div>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+          <div className="flex-1 min-w-[16rem] relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={changeSearch}
               placeholder="Search by name, SKU, or Tally name..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={changeCategory}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
             <option value="">All Categories</option>
@@ -303,6 +328,34 @@ const Products = () => {
               </option>
             ))}
           </select>
+          <div className="flex items-center gap-2" title="Last inward/outward date">
+            <FiCalendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <span className="text-sm text-gray-500 whitespace-nowrap">Last Updated</span>
+            <input
+              type="date"
+              value={updatedFrom}
+              max={updatedTo || undefined}
+              onChange={changeUpdatedFrom}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            />
+            <span className="text-gray-400 text-xs font-medium">to</span>
+            <input
+              type="date"
+              value={updatedTo}
+              min={updatedFrom || undefined}
+              onChange={changeUpdatedTo}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            />
+            {(updatedFrom || updatedTo) && (
+              <button
+                onClick={clearDates}
+                className="p-2 text-gray-400 hover:text-gray-900"
+                title="Clear date filter"
+              >
+                <FiX className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -336,6 +389,9 @@ const Products = () => {
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Stock
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Updated
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -375,18 +431,33 @@ const Products = () => {
                             : 'bg-green-100 text-green-700'
                         }`}
                       >
-                        {product.current_stock} {product.unit}
+                        <span className="whitespace-nowrap">{product.current_stock} {product.unit}</span>
                       </span>
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap"
+                      title={product.last_movement_at ? format(new Date(product.last_movement_at), 'dd MMM yyyy, hh:mm a') : 'No inward/outward yet'}
+                    >
+                      {product.last_movement_at ? format(new Date(product.last_movement_at), 'dd MMM yyyy') : '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
+                        {user && (user.role === 'owner' || user.role === 'manager') && (
+                          <button
+                            onClick={() => setHistoryProduct(product)}
+                            className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-lg"
+                            title="Stock history"
+                          >
+                            <FiClock className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(product)}
                           className="p-2 text-gray-500 hover:text-black hover:bg-black-50 rounded-lg"
                         >
                           <FiEdit2 className="w-4 h-4" />
                         </button>
-                        {user && (user.role === 'owner' || user.role === 'manager') && (
+                        {user && user.role === 'owner' && (
                           <button
                             onClick={() => handleDelete(product)}
                             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
@@ -550,6 +621,7 @@ const Products = () => {
 
                   <input
                     type="number"
+                    disabled={editingProduct !== null}
                     value={formData.current_stock}
                     onChange={(e) =>
                       setFormData({
@@ -557,17 +629,16 @@ const Products = () => {
                         current_stock: e.target.value
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 ${editingProduct ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     required
-                    min={editingProduct ? editingProduct.current_stock : 0}
+                    min="0"
                   />
 
-                  {editingProduct &&
-                    Number(formData.current_stock) < Number(editingProduct.current_stock) && (
-                      <p className="mt-1 text-sm text-red-600">
-                        Decreasing stock not allowed.
-                      </p>
-                    )}
+                  {editingProduct && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Stock changes only through inwards and outwards.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -629,6 +700,8 @@ const Products = () => {
           </div>
         </div>
       )}
+
+      {historyProduct && <ProductHistoryModal product={historyProduct} onClose={() => setHistoryProduct(null)} />}
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}

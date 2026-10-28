@@ -109,6 +109,9 @@ class Product(models.Model):
     gst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
     hsn_code = models.CharField(max_length=20, blank=True)
 
+    # Time of the latest inward or outward of this product
+    last_movement_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -154,6 +157,12 @@ class StockTransaction(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     reference = models.CharField(max_length=100, blank=True)  # Invoice number, PO number, etc.
     notes = models.TextField(blank=True)
+    purchase = models.ForeignKey(
+        'purchases.PurchaseInvoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='stock_transactions'
+    )
+    outward = models.ForeignKey(
+        'sales.Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='stock_transactions'
+    )
     performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -161,6 +170,10 @@ class StockTransaction(models.Model):
         verbose_name = 'Stock Transaction'
         verbose_name_plural = 'Stock Transactions'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['product', '-created_at'], name='stocktxn_product_created_idx'),
+            models.Index(fields=['created_at'], name='stocktxn_created_idx'),
+        ]
     
     def __str__(self):
         return f"{self.product.name} - {self.transaction_type} - {self.quantity}"

@@ -43,8 +43,11 @@ const Invoices = () => {
     const departmentParam = searchParams.get('department');
 
     setProjectFilter(projectParam || '');
-    setSearchQuery(departmentParam || '');
-  }, [location.search]);
+    // Navigation can pre-fill the search box (e.g. from a product's stock history).
+    // The state is left in place: it lives only on this history entry, and clearing it
+    // would re-run this effect and wipe the search before it ever applies.
+    setSearchQuery(location.state?.search || departmentParam || '');
+  }, [location.search, location.state]);
 
 
   useEffect(() => {
@@ -56,7 +59,52 @@ const Invoices = () => {
 
 
   useEffect(() => {
-    fetchInvoices();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const params = {
+          page: pagination.currentPage,
+          page_size: 20
+        };
+        if (searchQuery) params.search = searchQuery;
+        if (projectFilter) params.project_name = projectFilter;
+        if (fromDate) params.created_at_gte = fromDate;
+        if (toDate) params.created_at_lte = toDate;
+
+        const response = await salesAPI.getInvoices(params);
+        if (cancelled) return;
+        const data = response.data;
+
+        if (data.results) {
+          setInvoices(data.results);
+          setPagination(prev => ({
+            ...prev,
+            count: data.count,
+            next: data.next,
+            previous: data.previous,
+            totalPages: Math.ceil(data.count / 20),
+          }));
+        } else {
+          setInvoices(data);
+          setPagination(prev => ({
+            ...prev,
+            count: data.length,
+            next: null,
+            previous: null,
+            totalPages: 1,
+          }));
+        }
+      } catch (error) {
+        if (!cancelled) console.error('Error fetching invoices:', error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [
     searchQuery,
     projectFilter,
@@ -64,46 +112,6 @@ const Invoices = () => {
     toDate,
     pagination.currentPage
   ]);
-
-  const fetchInvoices = async () => {
-    try {
-      const params = {
-        page: pagination.currentPage,
-        page_size: 20
-      };
-      if (searchQuery) params.search = searchQuery;
-      if (projectFilter) params.project_name = projectFilter;
-      if (fromDate) params.created_at_gte = fromDate;
-      if (toDate) params.created_at_lte = toDate;
-      
-      const response = await salesAPI.getInvoices(params);
-      const data = response.data;
-      
-      if (data.results) {
-        setInvoices(data.results);
-        setPagination(prev => ({
-          ...prev,
-          count: data.count,
-          next: data.next,
-          previous: data.previous,
-          totalPages: Math.ceil(data.count / 20),
-        }));
-      } else {
-        setInvoices(data);
-        setPagination(prev => ({
-          ...prev,
-          count: data.length,
-          next: null,
-          previous: null,
-          totalPages: 1,
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching invoices:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const viewInvoice = async (id) => {
     try {

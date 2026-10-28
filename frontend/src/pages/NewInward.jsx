@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { FiAlertTriangle, FiPlus, FiTrash2, FiTruck, FiX } from 'react-icons/fi';
+import { FiAlertTriangle, FiTrash2, FiTruck, FiX } from 'react-icons/fi';
 import { inventoryAPI, purchaseAPI } from '../services/api';
 import SearchSelect from '../components/SearchSelect';
 import ConfirmModal from '../components/ConfirmModal';
@@ -85,7 +85,17 @@ const NewInward = ({ onClose, onCreated }) => {
 
   const updateRow = (key, changes) => setRows((current) => current.map((row) => (row.key === key ? { ...row, ...changes } : row)));
 
-  const selectProduct = (key, product) =>
+  // A trailing empty row always exists; picking a product in it spawns the next one
+  const appendRowIfLast = (key) =>
+    setRows((current) => (current[current.length - 1]?.key === key ? [...current, emptyRow()] : current));
+
+  // A row with nothing entered is ignored on submit (the trailing empty row is the common case)
+  const isRowEmpty = (row) =>
+    !row.product && !row.newProduct && !row.query.trim() && row.quantity === '' && row.unit_price === '';
+
+  const filledRows = rows.filter((row) => !isRowEmpty(row));
+
+  const selectProduct = (key, product) => {
     updateRow(key, {
       product,
       newProduct: null,
@@ -94,9 +104,12 @@ const NewInward = ({ onClose, onCreated }) => {
       unit_price: String(product.cost_price),
       tax_rate: String(product.gst_rate),
     });
+    appendRowIfLast(key);
+  };
 
   const saveNewProduct = (data) => {
     updateRow(newProductRow.key, { product: null, newProduct: data, query: data.name, tax_rate: data.gst_rate });
+    appendRowIfLast(newProductRow.key);
     setNewProductRow(null);
   };
 
@@ -111,8 +124,9 @@ const NewInward = ({ onClose, onCreated }) => {
     if (duplicate) return `This invoice is already recorded as ${duplicate.inward_number}`;
     if (!invoiceDate) return 'Enter the invoice date';
     if (invoiceDate > today) return 'Invoice date cannot be in the future';
-    for (let i = 0; i < rows.length; i += 1) {
-      const row = rows[i];
+    if (filledRows.length === 0) return 'Item 1: select a product from the suggestions';
+    for (let i = 0; i < filledRows.length; i += 1) {
+      const row = filledRows[i];
       if (!row.product && !row.newProduct) return `Item ${i + 1}: select a product from the suggestions`;
       if (needsCategory(row) && !row.category_id) return `Item ${i + 1}: select a category`;
       if (row.newProduct && !row.newProduct.category) return `Item ${i + 1}: select a category`;
@@ -146,7 +160,7 @@ const NewInward = ({ onClose, onCreated }) => {
         po_number: poNumber.trim(),
         round_off: (parseFloat(roundOff) || 0).toFixed(2),
         notes: notes.trim(),
-        items: rows.map((row) => ({
+        items: filledRows.map((row) => ({
           ...(row.product ? { product_id: row.product.id } : { new_product: row.newProduct }),
           ...(needsCategory(row) ? { category_id: Number(row.category_id) } : {}),
           quantity: row.quantity,
@@ -393,13 +407,7 @@ const NewInward = ({ onClose, onCreated }) => {
                 </tbody>
               </table>
             </div>
-            <button
-              onClick={() => setRows((current) => [...current, emptyRow()])}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-dashed border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <FiPlus className="w-4 h-4" />
-              Add Item
-            </button>
+            <p className="text-xs text-gray-400">Fill a row to add the next item automatically</p>
           </div>
 
           {/* Totals */}
@@ -426,16 +434,26 @@ const NewInward = ({ onClose, onCreated }) => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Round Off</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="-10"
-                  max="10"
-                  value={roundOff}
-                  onChange={(e) => setRoundOff(e.target.value)}
-                  placeholder="0.00"
-                  className="w-28 px-3 py-1.5 text-sm text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setRoundOff((Math.round(totals.subtotal + totals.tax) - totals.subtotal - totals.tax).toFixed(2))}
+                    title="Auto round off to a whole rupee total"
+                    className="text-3xl"
+                  >
+                    ≅
+                  </button>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="-10"
+                    max="10"
+                    value={roundOff}
+                    onChange={(e) => setRoundOff(e.target.value)}
+                    placeholder="0.00"
+                    className="w-28 px-3 py-1.5 text-sm text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               </div>
               <div className="flex justify-between pt-3 border-t text-lg font-bold">
                 <span>Total</span>
@@ -481,7 +499,7 @@ const NewInward = ({ onClose, onCreated }) => {
         onClose={() => !submitting && setShowConfirm(false)}
         onConfirm={handleSubmit}
         title="Submit inward?"
-        message={`${rows.length} item(s) from ${supplier?.name || ''}, total ${formatCurrency(totals.total)}. Stock will be added now. Once submitted, this inward cannot be edited or reverted.`}
+        message={`${filledRows.length} item(s) from ${supplier?.name || ''}, total ${formatCurrency(totals.total)}. Stock will be added now. Once submitted, this inward cannot be edited or reverted.`}
         confirmText={submitting ? 'Submitting...' : 'Submit'}
         type="info"
       />
